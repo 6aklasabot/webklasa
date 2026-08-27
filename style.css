@@ -2,13 +2,14 @@
 
 /* Tag Colors */
 .tag{display:inline-block;padding:5px 10px;background:#fff0f0;color:#e05252;border-radius:8px;font-size:12px;font-weight:800}
-.tag.purple{background:#f0edff;color:#6c5ce7}
-.tag.green{background:#eafaf1;color:#24935b}
-.tag.blue{background:#eef6ff;color:#2b7fff}
-.tag.orange{background:#fff4e6;color:#f97316}
-.tag.yellow{background:#fefce8;color:#ca8a04}
-.tag.pink{background:#fdf2f8;color:#ec4899}
-.tag.cyan{background:#e0f2fe;color:#0284c7}
+.tag.purple{background:#f0edff;color:#6c5ce7} /* uncategorized */
+.tag.green{background:#eafaf1;color:#24935b} /* szkoła */
+.tag.blue{background:#eef6ff;color:#2b7fff} /* ogłoszenie */
+.tag.orange{background:#fff4e6;color:#f97316} /* zapiekanak */
+.tag.yellow{background:#fefce8;color:#ca8a04} /* ważne */
+.tag.pink{background:#fdf2f8;color:#ec4899} /* nowy */
+.tag.cyan{background:#e0f2fe;color:#0284c7} /* nowy */
+.tag.red{background:#fa8989;color:#fa2d2d} /* uwaga */
 
 /* Schedule PNG Wrapper */
 .schedule-section{background:#fff}
