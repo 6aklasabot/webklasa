@@ -3,86 +3,84 @@ const menu=document.querySelector(".menu-btn");const links=document.querySelecto
     overlay.className = "news-image-overlay";
 
     overlay.innerHTML = `
-        <button class="news-image-close" aria-label="Zamknij">×</button>
+        <button class="news-image-close">×</button>
 
         <div class="news-image-controls">
-            <button id="zoomOut">−</button>
-            <button id="zoomReset">100%</button>
-            <button id="zoomIn">+</button>
+            <button class="zoom-out">−</button>
+            <span class="zoom-level">100%</span>
+            <button class="zoom-in">+</button>
         </div>
 
-        <div class="news-image-container">
-            <img src="${src}" alt="Powiększony obraz" id="newsZoomImage">
-        </div>
+        <img class="news-zoom-image" src="${src}" alt="Powiększony obraz">
     `;
 
     document.body.appendChild(overlay);
 
-    const img = overlay.querySelector("#newsZoomImage");
-    const container = overlay.querySelector(".news-image-container");
+    const img = overlay.querySelector(".news-zoom-image");
+    const zoomLevel = overlay.querySelector(".zoom-level");
 
-    let scale = 1;
-    let x = 0;
-    let y = 0;
+    let zoom = 1;
+    let posX = 0;
+    let posY = 0;
 
-    function updateImage() {
+    function update() {
         img.style.transform =
-            `translate(${x}px, ${y}px) scale(${scale})`;
+            `translate(${posX}px, ${posY}px) scale(${zoom})`;
 
-        overlay.querySelector("#zoomReset").textContent =
-            Math.round(scale * 100) + "%";
+        zoomLevel.textContent = Math.round(zoom * 100) + "%";
     }
 
-    function zoom(amount) {
-        scale = Math.min(5, Math.max(0.5, scale + amount));
-        updateImage();
-    }
-
-    overlay.querySelector("#zoomIn").onclick = () => zoom(0.25);
-    overlay.querySelector("#zoomOut").onclick = () => zoom(-0.25);
-
-    overlay.querySelector("#zoomReset").onclick = () => {
-        scale = 1;
-        x = 0;
-        y = 0;
-        updateImage();
+    // zoom in
+    overlay.querySelector(".zoom-in").onclick = () => {
+        zoom = Math.min(5, zoom + 0.25);
+        update();
     };
 
-    // wheel
-    container.addEventListener("wheel", (e) => {
-        e.preventDefault();
-        zoom(e.deltaY < 0 ? 0.25 : -0.25);
-    }, { passive: false });
+    // zoom out
+    overlay.querySelector(".zoom-out").onclick = () => {
+        zoom = Math.max(0.5, zoom - 0.25);
+        update();
+    };
 
-    // 2x click reset
-    img.addEventListener("dblclick", () => {
-        scale = 1;
-        x = 0;
-        y = 0;
-        updateImage();
-    });
+    // reset
+    zoomLevel.onclick = () => {
+        zoom = 1;
+        posX = 0;
+        posY = 0;
+        update();
+    };
+
+    // mouse wheel
+    overlay.addEventListener("wheel", (e) => {
+        e.preventDefault();
+
+        zoom += e.deltaY < 0 ? 0.25 : -0.25;
+        zoom = Math.max(0.5, Math.min(5, zoom));
+
+        update();
+    }, { passive: false });
 
     // drag
     let dragging = false;
-    let startX = 0;
-    let startY = 0;
+    let startX;
+    let startY;
 
     img.addEventListener("mousedown", (e) => {
-        if (scale <= 1) return;
+        if (zoom <= 1) return;
 
         dragging = true;
-        startX = e.clientX - x;
-        startY = e.clientY - y;
+        startX = e.clientX - posX;
+        startY = e.clientY - posY;
         img.style.cursor = "grabbing";
     });
 
     document.addEventListener("mousemove", (e) => {
         if (!dragging) return;
 
-        x = e.clientX - startX;
-        y = e.clientY - startY;
+        posX = e.clientX - startX;
+        posY = e.clientY - startY;
 
-        updateImage();
+        update();
     });
 
     document.addEventListener("mouseup", () => {
@@ -90,26 +88,33 @@ const menu=document.querySelector(".menu-btn");const links=document.querySelecto
         img.style.cursor = "grab";
     });
 
-    // X
+    // 2x click reset
+    img.addEventListener("dblclick", () => {
+        zoom = 1;
+        posX = 0;
+        posY = 0;
+        update();
+    });
+
+    // wyjsc knopka
     overlay.querySelector(".news-image-close").onclick = () => {
         overlay.remove();
     };
 
+    // wyjsc 2
     overlay.addEventListener("click", (e) => {
         if (e.target === overlay) {
             overlay.remove();
         }
     });
 
-    // ESC
-    function closeOnEscape(e) {
+    // esc
+    document.addEventListener("keydown", function esc(e) {
         if (e.key === "Escape") {
             overlay.remove();
-            document.removeEventListener("keydown", closeOnEscape);
+            document.removeEventListener("keydown", esc);
         }
-    }
+    });
 
-    document.addEventListener("keydown", closeOnEscape);
-
-    updateImage();
+    update();
 }
