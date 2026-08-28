@@ -23,6 +23,56 @@
     color:#9999a8;
     margin-top:auto;
 }
+
+.news-image{
+    width:100%;
+    max-height:190px;
+    object-fit:contain;
+    border-radius:12px;
+    margin:8px 0 18px;
+    cursor:pointer;
+    transition:transform .2s ease, opacity .2s ease;
+}
+
+.news-image:hover{
+    transform:scale(1.02);
+    opacity:.9;
+}
+
+.news-image-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.85);
+    z-index:9999;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+    cursor:zoom-out;
+}
+
+.news-image-overlay img{
+    max-width:95vw;
+    max-height:90vh;
+    object-fit:contain;
+    border-radius:12px;
+    box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+.news-image-close{
+    position:absolute;
+    top:20px;
+    right:25px;
+    width:45px;
+    height:45px;
+    border:0;
+    border-radius:50%;
+    background:white;
+    color:#222;
+    font-size:30px;
+    line-height:45px;
+    cursor:pointer;
+}
 .tag{display:inline-block;padding:5px 10px;background:#fff0f0;color:#e05252;border-radius:8px;font-size:12px;font-weight:800}
 .tag.purple{background:#f0edff;color:#6c5ce7} /* uncategorized */
 .tag.green{background:#eafaf1;color:#24935b} /* Szkoła */
