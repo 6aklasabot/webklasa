@@ -1,3 +1,16 @@
+/*
+ ________   ______         _______    ______  ________ 
+|        \ /      \       |       \  /      \|        \
+ \$$$$$$$$|  $$$$$$\      | $$$$$$$\|  $$$$$$\\$$$$$$$$
+    /  $$ | $$__| $$      | $$__/ $$| $$  | $$  | $$   
+   /  $$  | $$    $$      | $$    $$| $$  | $$  | $$   
+  /  $$   | $$$$$$$$      | $$$$$$$\| $$  | $$  | $$   
+ /  $$    | $$  | $$      | $$__/ $$| $$__/ $$  | $$   
+|  $$     | $$  | $$      | $$    $$ \$$    $$  | $$   
+ \$$       \$$   \$$       \$$$$$$$   \$$$$$$    \$$ 
+           ascii art, 7a bot, posxalko ixixi     
+                                                 */
+
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f7fb;color:#171725;line-height:1.6}
