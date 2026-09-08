@@ -1,4 +1,25 @@
 /* =========================
+   MOBILE MENU
+   ========================= */
+
+const menuBtn = document.querySelector(".menu-btn");
+const navLinks = document.querySelector(".nav-links");
+
+if (menuBtn && navLinks) {
+
+    menuBtn.addEventListener("click", function () {
+        navLinks.classList.toggle("open");
+    });
+
+    navLinks.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+            navLinks.classList.remove("open");
+        });
+    });
+}
+
+
+/* =========================
    ROZKŁAD ZOOM
    ========================= */
 
@@ -21,6 +42,8 @@ let scheduleLastDistance = null;
 
 function updateScheduleZoom() {
 
+    if (!scheduleZoomImage || !scheduleZoomLevel) return;
+
     scheduleZoomImage.style.transform =
         `translate(${schedulePosX}px, ${schedulePosY}px) scale(${scheduleZoom})`;
 
@@ -32,6 +55,8 @@ function updateScheduleZoom() {
 /* OPEN */
 
 function openScheduleImage(src) {
+
+    if (!scheduleOverlay || !scheduleZoomImage) return;
 
     scheduleZoomImage.src = src;
 
@@ -51,6 +76,8 @@ function openScheduleImage(src) {
 
 function closeScheduleImage(event) {
 
+    if (!scheduleOverlay) return;
+
     if (
         event &&
         event.target !== scheduleOverlay &&
@@ -69,12 +96,9 @@ function closeScheduleImage(event) {
 
 function scheduleZoomIn(event) {
 
-    event.stopPropagation();
+    if (event) event.stopPropagation();
 
-    scheduleZoom = Math.min(
-        5,
-        scheduleZoom + 0.25
-    );
+    scheduleZoom = Math.min(5, scheduleZoom + 0.25);
 
     updateScheduleZoom();
 }
@@ -84,12 +108,9 @@ function scheduleZoomIn(event) {
 
 function scheduleZoomOut(event) {
 
-    event.stopPropagation();
+    if (event) event.stopPropagation();
 
-    scheduleZoom = Math.max(
-        0.5,
-        scheduleZoom - 0.25
-    );
+    scheduleZoom = Math.max(0.5, scheduleZoom - 0.25);
 
     updateScheduleZoom();
 }
@@ -99,7 +120,7 @@ function scheduleZoomOut(event) {
 
 function scheduleZoomReset(event) {
 
-    event.stopPropagation();
+    if (event) event.stopPropagation();
 
     scheduleZoom = 1;
     schedulePosX = 0;
@@ -109,229 +130,184 @@ function scheduleZoomReset(event) {
 }
 
 
-/* RESET BY CLICKING PERCENTAGE */
-
-scheduleZoomLevel.onclick = function(event) {
-
-    event.stopPropagation();
-
-    scheduleZoom = 1;
-    schedulePosX = 0;
-    schedulePosY = 0;
-
-    updateScheduleZoom();
-};
-
-
-/* =========================
-   MOUSE WHEEL
-   ========================= */
-
-scheduleOverlay.addEventListener("wheel", function(event) {
-
-    event.preventDefault();
-
-    if (event.deltaY < 0) {
-        scheduleZoom += 0.25;
-    } else {
-        scheduleZoom -= 0.25;
-    }
-
-    scheduleZoom = Math.max(
-        0.5,
-        Math.min(5, scheduleZoom)
-    );
-
-    updateScheduleZoom();
-
-}, { passive: false });
-
-
-/* =========================
-   PC DRAG
-   ========================= */
-
-scheduleZoomImage.addEventListener("mousedown", function(event) {
-
-    if (scheduleZoom <= 1) return;
-
-    event.preventDefault();
-
-    scheduleDragging = true;
-
-    scheduleStartX =
-        event.clientX - schedulePosX;
-
-    scheduleStartY =
-        event.clientY - schedulePosY;
-
-    scheduleZoomImage.style.cursor = "grabbing";
-});
-
-
-document.addEventListener("mousemove", function(event) {
-
-    if (!scheduleDragging) return;
-
-    schedulePosX =
-        event.clientX - scheduleStartX;
-
-    schedulePosY =
-        event.clientY - scheduleStartY;
-
-    updateScheduleZoom();
-});
-
-
-document.addEventListener("mouseup", function() {
-
-    scheduleDragging = false;
-
-    scheduleZoomImage.style.cursor = "grab";
-});
-
-
-/* =========================
-   DOUBLE CLICK RESET
-   ========================= */
-
-scheduleZoomImage.addEventListener("dblclick", function() {
-
-    scheduleZoom = 1;
-    schedulePosX = 0;
-    schedulePosY = 0;
-
-    updateScheduleZoom();
-});
-
-
-/* =========================
-   PHONE PINCH
-   ========================= */
+/* TOUCH DISTANCE HELPER */
 
 function getScheduleTouchDistance(touches) {
 
-    const dx =
-        touches[0].clientX -
-        touches[1].clientX;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
 
-    const dy =
-        touches[0].clientY -
-        touches[1].clientY;
-
-    return Math.sqrt(
-        dx * dx + dy * dy
-    );
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 
-scheduleZoomImage.addEventListener("touchstart", function(event) {
+if (scheduleOverlay && scheduleZoomImage && scheduleZoomLevel) {
 
-    event.preventDefault();
+    /* RESET BY CLICKING PERCENTAGE */
 
-    if (event.touches.length === 2) {
+    scheduleZoomLevel.onclick = function (event) {
 
-        scheduleLastDistance =
-            getScheduleTouchDistance(event.touches);
+        event.stopPropagation();
 
-        scheduleDragging = false;
+        scheduleZoom = 1;
+        schedulePosX = 0;
+        schedulePosY = 0;
 
-    } else if (
-        event.touches.length === 1 &&
-        scheduleZoom > 1
-    ) {
+        updateScheduleZoom();
+    };
+
+
+    /* MOUSE WHEEL */
+
+    scheduleOverlay.addEventListener("wheel", function (event) {
+
+        event.preventDefault();
+
+        if (event.deltaY < 0) {
+            scheduleZoom += 0.25;
+        } else {
+            scheduleZoom -= 0.25;
+        }
+
+        scheduleZoom = Math.max(0.5, Math.min(5, scheduleZoom));
+
+        updateScheduleZoom();
+
+    }, { passive: false });
+
+
+    /* PC DRAG */
+
+    scheduleZoomImage.addEventListener("mousedown", function (event) {
+
+        if (scheduleZoom <= 1) return;
+
+        event.preventDefault();
 
         scheduleDragging = true;
 
-        scheduleStartX =
-            event.touches[0].clientX - schedulePosX;
+        scheduleStartX = event.clientX - schedulePosX;
+        scheduleStartY = event.clientY - schedulePosY;
 
-        scheduleStartY =
-            event.touches[0].clientY - schedulePosY;
-    }
+        scheduleZoomImage.style.cursor = "grabbing";
+    });
 
-}, { passive: false });
+    document.addEventListener("mousemove", function (event) {
+
+        if (!scheduleDragging) return;
+
+        schedulePosX = event.clientX - scheduleStartX;
+        schedulePosY = event.clientY - scheduleStartY;
+
+        updateScheduleZoom();
+    });
+
+    document.addEventListener("mouseup", function () {
+
+        scheduleDragging = false;
+
+        scheduleZoomImage.style.cursor = "grab";
+    });
 
 
-scheduleZoomImage.addEventListener("touchmove", function(event) {
+    /* DOUBLE CLICK RESET */
 
-    event.preventDefault();
+    scheduleZoomImage.addEventListener("dblclick", function () {
+
+        scheduleZoom = 1;
+        schedulePosX = 0;
+        schedulePosY = 0;
+
+        updateScheduleZoom();
+    });
 
 
-    /* PINCH */
+    /* PHONE PINCH */
 
-    if (event.touches.length === 2) {
+    scheduleZoomImage.addEventListener("touchstart", function (event) {
 
-        const distance =
-            getScheduleTouchDistance(event.touches);
+        event.preventDefault();
 
-        if (scheduleLastDistance !== null) {
+        if (event.touches.length === 2) {
 
-            const difference =
-                distance - scheduleLastDistance;
+            scheduleLastDistance = getScheduleTouchDistance(event.touches);
 
-            scheduleZoom += difference * 0.005;
+            scheduleDragging = false;
 
-            scheduleZoom = Math.max(
-                0.5,
-                Math.min(5, scheduleZoom)
-            );
+        } else if (event.touches.length === 1 && scheduleZoom > 1) {
+
+            scheduleDragging = true;
+
+            scheduleStartX = event.touches[0].clientX - schedulePosX;
+            scheduleStartY = event.touches[0].clientY - schedulePosY;
+        }
+
+    }, { passive: false });
+
+
+    scheduleZoomImage.addEventListener("touchmove", function (event) {
+
+        event.preventDefault();
+
+        /* PINCH */
+
+        if (event.touches.length === 2) {
+
+            const distance = getScheduleTouchDistance(event.touches);
+
+            if (scheduleLastDistance !== null) {
+
+                const difference = distance - scheduleLastDistance;
+
+                scheduleZoom += difference * 0.005;
+
+                scheduleZoom = Math.max(0.5, Math.min(5, scheduleZoom));
+
+                updateScheduleZoom();
+            }
+
+            scheduleLastDistance = distance;
+
+            return;
+        }
+
+        /* DRAG */
+
+        if (event.touches.length === 1 && scheduleDragging) {
+
+            schedulePosX = event.touches[0].clientX - scheduleStartX;
+            schedulePosY = event.touches[0].clientY - scheduleStartY;
 
             updateScheduleZoom();
         }
 
-        scheduleLastDistance = distance;
-
-        return;
-    }
+    }, { passive: false });
 
 
-    /* DRAG */
+    scheduleZoomImage.addEventListener("touchend", function (event) {
 
-    if (
-        event.touches.length === 1 &&
-        scheduleDragging
-    ) {
+        if (event.touches.length < 2) {
+            scheduleLastDistance = null;
+        }
 
-        schedulePosX =
-            event.touches[0].clientX - scheduleStartX;
-
-        schedulePosY =
-            event.touches[0].clientY - scheduleStartY;
-
-        updateScheduleZoom();
-    }
-
-}, { passive: false });
+        if (event.touches.length === 0) {
+            scheduleDragging = false;
+        }
+    });
 
 
-scheduleZoomImage.addEventListener("touchend", function(event) {
+    /* ESC */
 
-    if (event.touches.length < 2) {
-        scheduleLastDistance = null;
-    }
+    document.addEventListener("keydown", function (event) {
 
-    if (event.touches.length === 0) {
-        scheduleDragging = false;
-    }
+        if (
+            event.key === "Escape" &&
+            scheduleOverlay.classList.contains("active")
+        ) {
 
-});
+            scheduleOverlay.classList.remove("active");
 
-
-/* =========================
-   ESC
-   ========================= */
-
-document.addEventListener("keydown", function(event) {
-
-    if (
-        event.key === "Escape" &&
-        scheduleOverlay.classList.contains("active")
-    ) {
-
-        scheduleOverlay.classList.remove("active");
-
-        document.body.style.overflow = "";
-    }
-
-});
+            document.body.style.overflow = "";
+        }
+    });
+}
