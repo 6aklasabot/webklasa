@@ -1,313 +1,215 @@
-const menu = document.querySelector(".menu-btn");
-const links = document.querySelector(".nav-links");
+/* =========================
+   ROZKŁAD ZOOM
+   ========================= */
 
-menu.addEventListener("click", () => links.classList.toggle("open"));
+const scheduleOverlay = document.getElementById("scheduleOverlay");
+const scheduleZoomImage = document.getElementById("scheduleZoomImage");
+const scheduleZoomLevel = document.getElementById("scheduleZoomLevel");
 
-document.querySelectorAll(".nav-links a").forEach(a =>
-a.addEventListener("click", () => links.classList.remove("open"))
-);
+let scheduleZoom = 1;
+let schedulePosX = 0;
+let schedulePosY = 0;
 
-function openNewsImage(src) {
-const overlay = document.createElement("div");
-overlay.className = "news-image-overlay";
+let scheduleDragging = false;
+let scheduleStartX = 0;
+let scheduleStartY = 0;
 
-```
-overlay.innerHTML = `
-    <button class="news-image-close">×</button>
+let scheduleLastDistance = null;
 
-    <div class="news-image-controls">
-        <button class="zoom-out">−</button>
-        <span class="zoom-level">100%</span>
-        <button class="zoom-in">+</button>
-    </div>
 
-    <img class="news-zoom-image" src="${src}" alt="Powiększony obraz">
-`;
+/* UPDATE */
 
-document.body.appendChild(overlay);
+function updateScheduleZoom() {
 
-const img = overlay.querySelector(".news-zoom-image");
-const zoomLevel = overlay.querySelector(".zoom-level");
+    scheduleZoomImage.style.transform =
+        `translate(${schedulePosX}px, ${schedulePosY}px) scale(${scheduleZoom})`;
 
-let zoom = 1;
-let posX = 0;
-let posY = 0;
-
-function update() {
-    img.style.transform =
-        `translate(${posX}px, ${posY}px) scale(${zoom})`;
-
-    zoomLevel.textContent = Math.round(zoom * 100) + "%";
+    scheduleZoomLevel.textContent =
+        Math.round(scheduleZoom * 100) + "%";
 }
 
-// zoom in
-overlay.querySelector(".zoom-in").onclick = () => {
-    zoom = Math.min(5, zoom + 0.25);
-    update();
-};
 
-// zoom out
-overlay.querySelector(".zoom-out").onclick = () => {
-    zoom = Math.max(0.5, zoom - 0.25);
-    update();
-};
-
-// reset
-zoomLevel.onclick = () => {
-    zoom = 1;
-    posX = 0;
-    posY = 0;
-    update();
-};
-
-// mouse wheel
-overlay.addEventListener("wheel", (e) => {
-    e.preventDefault();
-
-    zoom += e.deltaY < 0 ? 0.25 : -0.25;
-    zoom = Math.max(0.5, Math.min(5, zoom));
-
-    update();
-}, { passive: false });
-
-// drag
-let dragging = false;
-let startX;
-let startY;
-
-img.addEventListener("mousedown", (e) => {
-    if (zoom <= 1) return;
-
-    dragging = true;
-    startX = e.clientX - posX;
-    startY = e.clientY - posY;
-    img.style.cursor = "grabbing";
-});
-
-document.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-
-    posX = e.clientX - startX;
-    posY = e.clientY - startY;
-
-    update();
-});
-
-document.addEventListener("mouseup", () => {
-    dragging = false;
-    img.style.cursor = "grab";
-});
-
-// 2x click reset
-img.addEventListener("dblclick", () => {
-    zoom = 1;
-    posX = 0;
-    posY = 0;
-    update();
-});
-
-// close button
-overlay.querySelector(".news-image-close").onclick = () => {
-    overlay.remove();
-};
-
-// close by clicking outside image
-overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
-        overlay.remove();
-    }
-});
-
-// esc
-document.addEventListener("keydown", function esc(e) {
-    if (e.key === "Escape") {
-        overlay.remove();
-        document.removeEventListener("keydown", esc);
-    }
-});
-
-update();
-```
-
-}
-
-/* =========================================================
-funkcja dla rozklada == zoom
-========================================================= */
+/* OPEN */
 
 function openScheduleImage(src) {
 
-```
-const overlay = document.createElement("div");
-overlay.className = "schedule-image-overlay";
+    scheduleZoomImage.src = src;
 
-overlay.innerHTML = `
-    <button class="schedule-image-close">×</button>
+    scheduleZoom = 1;
+    schedulePosX = 0;
+    schedulePosY = 0;
 
-    <div class="schedule-image-controls">
-        <button class="schedule-zoom-out">−</button>
-        <span class="schedule-zoom-level">100%</span>
-        <button class="schedule-zoom-in">+</button>
-        <button class="schedule-zoom-reset">↻</button>
-    </div>
+    updateScheduleZoom();
 
-    <img
-        class="schedule-zoom-image"
-        src="${src}"
-        alt="Powiększony rozkład"
-        draggable="false"
-    >
-`;
+    scheduleOverlay.classList.add("active");
 
-document.body.appendChild(overlay);
-
-const img = overlay.querySelector(".schedule-zoom-image");
-const zoomLevel = overlay.querySelector(".schedule-zoom-level");
-
-let zoom = 1;
-let posX = 0;
-let posY = 0;
-
-let dragging = false;
-let startX = 0;
-let startY = 0;
-
-let lastTouchDistance = null;
-
-
-/* upd */
-
-function update() {
-
-    img.style.transform =
-        `translate(${posX}px, ${posY}px) scale(${zoom})`;
-
-    zoomLevel.textContent =
-        Math.round(zoom * 100) + "%";
+    document.body.style.overflow = "hidden";
 }
 
 
-/* zoomin */
+/* CLOSE */
 
-overlay.querySelector(".schedule-zoom-in").onclick = () => {
+function closeScheduleImage(event) {
 
-    zoom = Math.min(5, zoom + 0.25);
+    if (
+        event &&
+        event.target !== scheduleOverlay &&
+        event.target !== scheduleZoomImage
+    ) {
+        return;
+    }
 
-    update();
-};
+    scheduleOverlay.classList.remove("active");
 
-
-/* zoom out */
-
-overlay.querySelector(".schedule-zoom-out").onclick = () => {
-
-    zoom = Math.max(0.5, zoom - 0.25);
-
-    update();
-};
+    document.body.style.overflow = "";
+}
 
 
-/* reset */
+/* PLUS */
 
-overlay.querySelector(".schedule-zoom-reset").onclick = () => {
+function scheduleZoomIn(event) {
 
-    zoom = 1;
-    posX = 0;
-    posY = 0;
+    event.stopPropagation();
 
-    update();
-};
-
-
-/* procent = reset */
-
-zoomLevel.onclick = () => {
-
-    zoom = 1;
-    posX = 0;
-    posY = 0;
-
-    update();
-};
-
-
-/* =====================================================
-   komp kalosiko
-   ===================================================== */
-
-overlay.addEventListener("wheel", (e) => {
-
-    e.preventDefault();
-
-    zoom += e.deltaY < 0 ? 0.25 : -0.25;
-
-    zoom = Math.max(
-        0.5,
-        Math.min(5, zoom)
+    scheduleZoom = Math.min(
+        5,
+        scheduleZoom + 0.25
     );
 
-    update();
+    updateScheduleZoom();
+}
+
+
+/* MINUS */
+
+function scheduleZoomOut(event) {
+
+    event.stopPropagation();
+
+    scheduleZoom = Math.max(
+        0.5,
+        scheduleZoom - 0.25
+    );
+
+    updateScheduleZoom();
+}
+
+
+/* RESET */
+
+function scheduleZoomReset(event) {
+
+    event.stopPropagation();
+
+    scheduleZoom = 1;
+    schedulePosX = 0;
+    schedulePosY = 0;
+
+    updateScheduleZoom();
+}
+
+
+/* RESET BY CLICKING PERCENTAGE */
+
+scheduleZoomLevel.onclick = function(event) {
+
+    event.stopPropagation();
+
+    scheduleZoom = 1;
+    schedulePosX = 0;
+    schedulePosY = 0;
+
+    updateScheduleZoom();
+};
+
+
+/* =========================
+   MOUSE WHEEL
+   ========================= */
+
+scheduleOverlay.addEventListener("wheel", function(event) {
+
+    event.preventDefault();
+
+    if (event.deltaY < 0) {
+        scheduleZoom += 0.25;
+    } else {
+        scheduleZoom -= 0.25;
+    }
+
+    scheduleZoom = Math.max(
+        0.5,
+        Math.min(5, scheduleZoom)
+    );
+
+    updateScheduleZoom();
 
 }, { passive: false });
 
 
-/* =====================================================
-   komp drag
-   ===================================================== */
+/* =========================
+   PC DRAG
+   ========================= */
 
-img.addEventListener("mousedown", (e) => {
+scheduleZoomImage.addEventListener("mousedown", function(event) {
 
-    if (zoom <= 1) return;
+    if (scheduleZoom <= 1) return;
 
-    e.preventDefault();
+    event.preventDefault();
 
-    dragging = true;
+    scheduleDragging = true;
 
-    startX = e.clientX - posX;
-    startY = e.clientY - posY;
+    scheduleStartX =
+        event.clientX - schedulePosX;
 
-    img.style.cursor = "grabbing";
+    scheduleStartY =
+        event.clientY - schedulePosY;
+
+    scheduleZoomImage.style.cursor = "grabbing";
 });
 
 
-document.addEventListener("mousemove", (e) => {
+document.addEventListener("mousemove", function(event) {
 
-    if (!dragging) return;
+    if (!scheduleDragging) return;
 
-    posX = e.clientX - startX;
-    posY = e.clientY - startY;
+    schedulePosX =
+        event.clientX - scheduleStartX;
 
-    update();
+    schedulePosY =
+        event.clientY - scheduleStartY;
+
+    updateScheduleZoom();
 });
 
 
-document.addEventListener("mouseup", () => {
+document.addEventListener("mouseup", function() {
 
-    dragging = false;
+    scheduleDragging = false;
 
-    img.style.cursor = "grab";
+    scheduleZoomImage.style.cursor = "grab";
 });
 
 
-/* =====================================================
-   2x click reset
-   ===================================================== */
+/* =========================
+   DOUBLE CLICK RESET
+   ========================= */
 
-img.addEventListener("dblclick", () => {
+scheduleZoomImage.addEventListener("dblclick", function() {
 
-    zoom = 1;
-    posX = 0;
-    posY = 0;
+    scheduleZoom = 1;
+    schedulePosX = 0;
+    schedulePosY = 0;
 
-    update();
+    updateScheduleZoom();
 });
 
 
-/* =====================================================
-   dwa palca telefon
-   ===================================================== */
+/* =========================
+   PHONE PINCH
+   ========================= */
 
-function getTouchDistance(touches) {
+function getScheduleTouchDistance(touches) {
 
     const dx =
         touches[0].clientX -
@@ -323,173 +225,113 @@ function getTouchDistance(touches) {
 }
 
 
-/* =====================================================
-   klik telefon
-   ===================================================== */
+scheduleZoomImage.addEventListener("touchstart", function(event) {
 
-img.addEventListener("touchstart", (e) => {
+    event.preventDefault();
 
-    e.preventDefault();
+    if (event.touches.length === 2) {
 
+        scheduleLastDistance =
+            getScheduleTouchDistance(event.touches);
 
-    /* Two fingers = pinch */
+        scheduleDragging = false;
 
-    if (e.touches.length === 2) {
-
-        lastTouchDistance =
-            getTouchDistance(e.touches);
-
-        dragging = false;
-
-        return;
-    }
-
-
-    /* One finger = drag */
-
-    if (e.touches.length === 1 && zoom > 1) {
-
-        dragging = true;
-
-        startX =
-            e.touches[0].clientX - posX;
-
-        startY =
-            e.touches[0].clientY - posY;
-    }
-
-}, { passive: false });
-
-
-/* =====================================================
-   klik ruchac
-   ===================================================== */
-
-img.addEventListener("touchmove", (e) => {
-
-    e.preventDefault();
-
-
-    /* dwa palca zoom */
-
-    if (e.touches.length === 2) {
-
-        const distance =
-            getTouchDistance(e.touches);
-
-        if (lastTouchDistance !== null) {
-
-            const difference =
-                distance - lastTouchDistance;
-
-            zoom += difference * 0.005;
-
-            zoom = Math.max(
-                0.5,
-                Math.min(5, zoom)
-            );
-
-            update();
-        }
-
-        lastTouchDistance = distance;
-
-        return;
-    }
-
-
-    /* One finger = MOVE */
-
-    if (
-        e.touches.length === 1 &&
-        dragging &&
-        zoom > 1
+    } else if (
+        event.touches.length === 1 &&
+        scheduleZoom > 1
     ) {
 
-        posX =
-            e.touches[0].clientX - startX;
+        scheduleDragging = true;
 
-        posY =
-            e.touches[0].clientY - startY;
+        scheduleStartX =
+            event.touches[0].clientX - schedulePosX;
 
-        update();
+        scheduleStartY =
+            event.touches[0].clientY - schedulePosY;
     }
 
 }, { passive: false });
 
 
-/* =====================================================
-   telefon touch end
-   ===================================================== */
+scheduleZoomImage.addEventListener("touchmove", function(event) {
 
-img.addEventListener("touchend", (e) => {
+    event.preventDefault();
 
-    if (e.touches.length < 2) {
 
-        lastTouchDistance = null;
+    /* PINCH */
+
+    if (event.touches.length === 2) {
+
+        const distance =
+            getScheduleTouchDistance(event.touches);
+
+        if (scheduleLastDistance !== null) {
+
+            const difference =
+                distance - scheduleLastDistance;
+
+            scheduleZoom += difference * 0.005;
+
+            scheduleZoom = Math.max(
+                0.5,
+                Math.min(5, scheduleZoom)
+            );
+
+            updateScheduleZoom();
+        }
+
+        scheduleLastDistance = distance;
+
+        return;
     }
 
-    if (e.touches.length === 0) {
 
-        dragging = false;
+    /* DRAG */
+
+    if (
+        event.touches.length === 1 &&
+        scheduleDragging
+    ) {
+
+        schedulePosX =
+            event.touches[0].clientX - scheduleStartX;
+
+        schedulePosY =
+            event.touches[0].clientY - scheduleStartY;
+
+        updateScheduleZoom();
+    }
+
+}, { passive: false });
+
+
+scheduleZoomImage.addEventListener("touchend", function(event) {
+
+    if (event.touches.length < 2) {
+        scheduleLastDistance = null;
+    }
+
+    if (event.touches.length === 0) {
+        scheduleDragging = false;
     }
 
 });
 
 
-/* =====================================================
-   zakryc
-   ===================================================== */
+/* =========================
+   ESC
+   ========================= */
 
-overlay.querySelector(".schedule-image-close").onclick = () => {
+document.addEventListener("keydown", function(event) {
 
-    overlay.remove();
+    if (
+        event.key === "Escape" &&
+        scheduleOverlay.classList.contains("active")
+    ) {
 
-    document.body.style.overflow = "";
-};
-
-
-/* =====================================================
-   klik po bg zakryc
-   ===================================================== */
-
-overlay.addEventListener("click", (e) => {
-
-    if (e.target === overlay) {
-
-        overlay.remove();
+        scheduleOverlay.classList.remove("active");
 
         document.body.style.overflow = "";
     }
+
 });
-
-
-/* =====================================================
-   ESC = CLOSE
-   ===================================================== */
-
-document.addEventListener("keydown", function esc(e) {
-
-    if (e.key === "Escape") {
-
-        overlay.remove();
-
-        document.body.style.overflow = "";
-
-        document.removeEventListener(
-            "keydown",
-            esc
-        );
-    }
-});
-
-
-/* Prevent page scrolling */
-
-document.body.style.overflow = "hidden";
-
-
-update();
-```
-
-}
