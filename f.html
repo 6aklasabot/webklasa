@@ -130,6 +130,20 @@
       
     </div>
   </footer>
-  <script src="script.js"></script>
-</body>
-</html>
+  <!-- zoom rozklad -->
+
+<div id="scheduleOverlay" class="schedule-image-overlay" onclick="closeScheduleImage(event)"> <div class="schedule-image-controls"> <button onclick="scheduleZoomOut(event)">−</button> <span id="scheduleZoomLevel" class="schedule-zoom-level">100%</span> <button onclick="scheduleZoomIn(event)">+</button> <button onclick="scheduleZoomReset(event)">↻</button> </div>
+
+<button class="schedule-image-close" onclick="closeScheduleImage()">×</button>
+
+<img
+    id="scheduleZoomImage"
+    class="schedule-zoom-image"
+    alt="Powiększony rozkład"
+    draggable="false"
+>
+
+</div>
+
+<script src="script.js"></script>
+</body> </html>
