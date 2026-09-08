@@ -397,6 +397,7 @@ footer{
     cursor: grab;
 
     transform-origin: center center;
+    transition: transform .15s ease;
 }
 
 .schedule-zoom-image:active {
