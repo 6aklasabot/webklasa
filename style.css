@@ -355,3 +355,146 @@ footer{
         max-height:80vh;
     }
 }
+/* =========================
+   ROZKŁAD ZOOM
+   ========================= */
+
+.schedule-img {
+    cursor: pointer;
+}
+
+.schedule-image-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, .92);
+
+    display: none;
+
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+
+    touch-action: none;
+}
+
+.schedule-image-overlay.active {
+    display: flex;
+}
+
+.schedule-zoom-image {
+    max-width: 90vw;
+    max-height: 85vh;
+
+    object-fit: contain;
+
+    border-radius: 12px;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    cursor: grab;
+
+    transform-origin: center center;
+}
+
+.schedule-zoom-image:active {
+    cursor: grabbing;
+}
+
+.schedule-image-controls {
+    position: fixed;
+
+    top: 20px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 100000;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.schedule-image-controls button,
+.schedule-zoom-level {
+    height: 45px;
+    min-width: 45px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: #fff;
+    color: #222;
+
+    font-size: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+}
+
+.schedule-zoom-level {
+    padding: 0 12px;
+    font-size: 15px;
+}
+
+.schedule-image-controls button:hover,
+.schedule-image-close:hover {
+    background: #eee;
+}
+
+.schedule-image-close {
+    position: fixed;
+
+    top: 20px;
+    right: 20px;
+
+    z-index: 100001;
+
+    width: 45px;
+    height: 45px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #fff;
+    color: #222;
+
+    font-size: 30px;
+
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+
+    .schedule-image-controls {
+        top: 15px;
+    }
+
+    .schedule-image-controls button,
+    .schedule-zoom-level {
+        height: 40px;
+        min-width: 42px;
+    }
+
+    .schedule-image-close {
+        top: 15px;
+        right: 15px;
+
+        width: 42px;
+        height: 42px;
+
+        font-size: 27px;
+    }
+
+    .schedule-zoom-image {
+        max-width: 96vw;
+        max-height: 80vh;
+    }
+}
