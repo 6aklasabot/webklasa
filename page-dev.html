@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>7a Bot — Dodaj aktualność</title>
+<title>7a Bot Admin</title>
 <style>
   :root{
     --accent:#6c5ce7;
@@ -251,13 +251,11 @@ async function tryUnlock(){
 $('lockBtn').addEventListener('click', tryUnlock);
 $('lockPassword').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
 
-// stay unlocked for the rest of this browser tab session
 if (sessionStorage.getItem('webklasa_unlocked') === '1') {
   $('lockScreen').style.display = 'none';
   $('app').style.display = 'block';
 }
 
-// restore remembered token
 const savedToken = localStorage.getItem('webklasa_admin_token');
 if (savedToken) { $('token').value = savedToken; $('rememberToken').checked = true; }
 
@@ -286,7 +284,6 @@ function showStatus(kind, msg){
   el.textContent = msg;
 }
 
-// UTF-8 safe base64 helpers (handles Polish diacritics, emoji, etc.)
 function b64Encode(str){
   const bytes = new TextEncoder().encode(str);
   let binary = '';
@@ -331,14 +328,12 @@ onclick="openNewsImage(this.src)"
 `;
 }
 
-// True if the character at `index` sits inside an HTML comment <!-- ... -->
 function isInsideComment(content, index){
   const lastOpen = content.lastIndexOf('<!--', index);
   const lastClose = content.lastIndexOf('-->', index);
   return lastOpen !== -1 && lastOpen > lastClose;
 }
 
-// Remove the oldest real (non-commented) news-card articles beyond maxPosts
 function trimOldPosts(content, maxPosts){
   const articleRegex = /<article class="news-card[^"]*">[\s\S]*?<\/article>\s*/g;
   const matches = [...content.matchAll(articleRegex)]
@@ -346,9 +341,8 @@ function trimOldPosts(content, maxPosts){
 
   if (matches.length <= maxPosts) return content;
 
-  const toRemove = matches.slice(maxPosts); // oldest ones, past the limit
+  const toRemove = matches.slice(maxPosts);
   let result = content;
-  // remove from the end backwards so earlier indices stay valid
   for (let i = toRemove.length - 1; i >= 0; i--) {
     const m = toRemove[i];
     result = result.slice(0, m.index) + result.slice(m.index + m[0].length);
