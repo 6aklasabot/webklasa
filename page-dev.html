@@ -245,8 +245,6 @@
 <script>
 const $ = id => document.getElementById(id);
 
-// --- Password gate ---
-// Only the SHA-256 hash is stored here, never the plain password.
 const LOCK_HASH = '4b45ecfff4cd1f022d274d000f17c5f000347ee1634e92aa3d33098811402861';
 
 async function sha256Hex(text){
@@ -453,7 +451,7 @@ onclick="openNewsImage(this.src)"
 function isInsideComment(content, index){
   const lastOpen = content.lastIndexOf('<!--', index);
   const lastClose = content.lastIndexOf('-->', index);
-  return lastOpen !== -1 && lastOpen > lastClose;
+  return lastOpen !== - && lastOpen > lastClose;
 }
 
 // Remove the oldest real (non-commented) news-card articles beyond maxPosts
@@ -562,7 +560,7 @@ $('publishBtn').addEventListener('click', async () => {
       throw new Error(`Nie udało się zapisać pliku (HTTP ${putRes.status}). ${errBody}`);
     }
 
-    showStatus('ok', 'Opublikowano i lista aktualności została przycięta do limitu! Zmiana pojawi się na stronie po odświeżeniu GitHub Pages (zwykle do minuty).');
+    showStatus('ok', 'Opublikowano i lista aktualności została przycięta do limitu! Zmiana pojawi się na stronie po odświeżeniu GitHub Pages (zwykle do 30 sekund).');
     $('title').value = '';
     $('content').value = '';
     $('imageFile').value = '';
