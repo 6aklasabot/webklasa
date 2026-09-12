@@ -450,7 +450,7 @@ onclick="openNewsImage(this.src)"
 function isInsideComment(content, index){
   const lastOpen = content.lastIndexOf('<!--', index);
   const lastClose = content.lastIndexOf('-->', index);
-  return lastOpen !== - && lastOpen > lastClose;
+  return lastOpen !== -1 && lastOpen > lastClose;
 }
 
 // Remove the oldest real (non-commented) news-card articles beyond maxPosts
