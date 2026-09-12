@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7a Bot — Dodaj aktualność</title>
+<style>
+  :root{
+    --accent:#6c5ce7;
+    --accent-dark:#5a4bd1;
+    --bg:#f6f5fb;
+    --card:#ffffff;
+    --text:#26243a;
+    --muted:#6b6880;
+    --border:#e3e1ee;
+    --danger:#d64545;
+    --ok:#2fa565;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:32px 16px 80px;
+  }
+  .wrap{max-width:620px;margin:0 auto;}
+  h1{font-size:1.5rem;margin-bottom:4px;}
+  .sub{color:var(--muted);margin-top:0;margin-bottom:28px;font-size:.95rem;}
+  fieldset{
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px 20px 8px;
+    margin-bottom:20px;
+    background:var(--card);
+  }
+  legend{padding:0 8px;font-weight:600;color:var(--accent-dark);font-size:.9rem;}
+  label{
+    display:block;
+    font-size:.85rem;
+    font-weight:600;
+    margin:14px 0 6px;
+  }
+  input[type=text],input[type=password],input[type=date],input[type=number],textarea,select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:.95rem;
+    font-family:inherit;
+    background:#fbfaff;
+    color:var(--text);
+  }
+  textarea{resize:vertical;min-height:90px;}
+  input:focus,textarea:focus,select:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  .hint{font-size:.78rem;color:var(--muted);margin-top:4px;}
+  .row{display:flex;gap:12px;}
+  .row > div{flex:1;}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin:14px 0;}
+  .checkbox-row input{width:auto;}
+  .checkbox-row label{margin:0;font-weight:400;font-size:.85rem;}
+  button{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:10px;
+    background:var(--accent);
+    color:#fff;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:8px;
+  }
+  button:hover{background:var(--accent-dark);}
+  button:disabled{background:#b8b4d6;cursor:not-allowed;}
+  .status{
+    margin-top:16px;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:.9rem;
+    display:none;
+    white-space:pre-wrap;
+  }
+  .status.error{display:block;background:#fdeaea;color:var(--danger);border:1px solid #f3c6c6;}
+  .status.ok{display:block;background:#e8f7ef;color:var(--ok);border:1px solid #bfe8d1;}
+  .status.pending{display:block;background:#eef0fb;color:var(--accent-dark);border:1px solid #d6d3f2;}
+  .preview{
+    border:1px dashed var(--border);
+    border-radius:14px;
+    padding:16px;
+    background:var(--card);
+  }
+  .preview h2{font-size:1rem;margin-top:0;}
+  .news-card{
+    background:#fbfaff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 16px;
+  }
+  .tag{
+    display:inline-block;
+    font-size:.72rem;
+    font-weight:700;
+    padding:3px 9px;
+    border-radius:999px;
+    margin-bottom:8px;
+  }
+  .tag.purple{background:#f0edff;color:#6c5ce7;}
+  .tag.green{background:#eafaf1;color:#24935b;}
+  .tag.blue{background:#eef6ff;color:#2b7fff;}
+  .tag.orange{background:#fff4e6;color:#f97316;}
+  .tag.yellow{background:#fefce8;color:#ca8a04;}
+  .tag.pink{background:#fdf2f8;color:#ec4899;}
+  .tag.cyan{background:#e0f2fe;color:#0284c7;}
+  .tag.red{background:#fa8989;color:#fa2d2d;}
+  .news-card h3{margin:0 0 6px;font-size:1rem;}
+  .news-card p{margin:0 0 8px;font-size:.9rem;line-height:1.5;}
+  .news-card small{color:var(--muted);}
+  #lockScreen{
+    max-width:340px;
+    margin:120px auto 0;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:28px;
+    text-align:center;
+  }
+  #lockScreen h1{font-size:1.2rem;margin-bottom:6px;}
+  #lockScreen p{color:var(--muted);font-size:.85rem;margin-top:0;}
+  #lockError{color:var(--danger);font-size:.82rem;min-height:1.2em;margin-top:8px;}
+  #app{display:none;}
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <h1>Dostęp chroniony</h1>
+  <p>Podaj hasło, żeby wejść do panelu dodawania aktualności.</p>
+  <input type="password" id="lockPassword" placeholder="Hasło">
+  <button id="lockBtn" style="margin-top:12px;">Wejdź</button>
+  <div id="lockError"></div>
+</div>
+
+<div class="wrap" id="app">
+  <h1>Dodaj aktualność</h1>
+  <p class="sub">Wysyła nowy wpis prosto do <code>index.html</code> w repo <strong>6aklasabot/webklasa</strong> przez GitHub API — dodaje go na górze listy i automatycznie usuwa najstarszy wpis, żeby lista nie rosła w nieskończoność.</p>
+
+  <fieldset>
+    <legend>Dostęp do repo</legend>
+    <label for="token">Personal Access Token (GitHub, fine-grained, uprawnienie „Contents: Read and write" na to repo)</label>
+    <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
+    <div class="checkbox-row">
+      <input type="checkbox" id="rememberToken">
+      <label for="rememberToken">Zapamiętaj token w tej przeglądarce (localStorage) — tylko na własnym urządzeniu</label>
+    </div>
+    <div class="row">
+      <div>
+        <label for="owner">Właściciel repo</label>
+        <input type="text" id="owner" value="6aklasabot">
+      </div>
+      <div>
+        <label for="repo">Repo</label>
+        <input type="text" id="repo" value="webklasa">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="branch">Branch</label>
+        <input type="text" id="branch" value="main">
+      </div>
+      <div>
+        <label for="path">Plik</label>
+        <input type="text" id="path" value="index.html">
+      </div>
+    </div>
+    <label for="maxPosts">Ile aktualności trzymać na stronie</label>
+    <input type="number" id="maxPosts" value="3" min="1" max="20">
+    <p class="hint">Po dodaniu nowego wpisu najstarsze wpisy powyżej tego limitu zostaną automatycznie usunięte (zwykle usunie się tylko 1).</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Treść wpisu</legend>
+    <label for="tagCategory">Kategoria (etykieta)</label>
+    <select id="tagCategory">
+      <option value="purple">Bez kategorii</option>
+      <option value="green">Szkoła</option>
+      <option value="blue" selected>Ogłoszenie</option>
+      <option value="orange">Przerwy Techniczne</option>
+      <option value="yellow">Ważne</option>
+      <option value="pink">Wydarzenia</option>
+      <option value="cyan">Projekt</option>
+      <option value="red">Uwaga</option>
+    </select>
+
+    <label for="title">Tytuł</label>
+    <input type="text" id="title" placeholder="Np. Nowa aktualizacja bota!">
+
+    <label for="content">Treść</label>
+    <textarea id="content" placeholder="Treść ogłoszenia..."></textarea>
+
+    <label for="date">Data</label>
+    <input type="date" id="date">
+
+    <label for="image">Ścieżka do zdjęcia (opcjonalnie, np. upl/pictures/nazwa.png)</label>
+    <input type="text" id="image" placeholder="zostaw puste, jeśli bez zdjęcia">
+    <p class="hint">Uwaga: pokazywanie zdjęcia w powiększeniu wymaga funkcji <code>openNewsImage</code> w script.js — jeśli jej tam nie ma, zdjęcie i tak się wyświetli, ale kliknięcie nic nie zrobi.</p>
+  </fieldset>
+
+  <div class="preview">
+    <h2>Podgląd karty</h2>
+    <article class="news-card" id="previewCard">
+      <span class="tag blue" id="pvTag">Ogłoszenie</span>
+      <h3 id="pvTitle">Tytuł wpisu</h3>
+      <p id="pvContent">Treść wpisu pojawi się tutaj.</p>
+      <small id="pvDate">2026-01-01</small>
+    </article>
+  </div>
+
+  <button id="publishBtn">Opublikuj na stronie</button>
+  <div class="status" id="status"></div>
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// --- Password gate ---
+// Only the SHA-256 hash is stored here, never the plain password.
+const LOCK_HASH = '4b45ecfff4cd1f022d274d000f17c5f000347ee1634e92aa3d33098811402861';
+
+async function sha256Hex(text){
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function tryUnlock(){
+  const pass = $('lockPassword').value;
+  const hash = await sha256Hex(pass);
+  if (hash === LOCK_HASH) {
+    $('lockScreen').style.display = 'none';
+    $('app').style.display = 'block';
+    sessionStorage.setItem('webklasa_unlocked', '1');
+  } else {
+    $('lockError').textContent = 'Złe hasło, spróbuj ponownie.';
+  }
+}
+$('lockBtn').addEventListener('click', tryUnlock);
+$('lockPassword').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+// stay unlocked for the rest of this browser tab session
+if (sessionStorage.getItem('webklasa_unlocked') === '1') {
+  $('lockScreen').style.display = 'none';
+  $('app').style.display = 'block';
+}
+
+// restore remembered token
+const savedToken = localStorage.getItem('webklasa_admin_token');
+if (savedToken) { $('token').value = savedToken; $('rememberToken').checked = true; }
+
+$('date').value = new Date().toISOString().slice(0,10);
+
+function selectedTag(){
+  const opt = $('tagCategory').selectedOptions[0];
+  return { name: opt.textContent, color: opt.value };
+}
+
+function updatePreview(){
+  const tag = selectedTag();
+  $('pvTag').textContent = tag.name;
+  $('pvTag').className = 'tag ' + tag.color;
+  $('pvTitle').textContent = $('title').value || 'Tytuł wpisu';
+  $('pvContent').textContent = $('content').value || 'Treść wpisu pojawi się tutaj.';
+  $('pvDate').textContent = $('date').value || '2026-01-01';
+}
+['tagCategory','title','content','date'].forEach(id => $(id).addEventListener('input', updatePreview));
+$('tagCategory').addEventListener('change', updatePreview);
+updatePreview();
+
+function showStatus(kind, msg){
+  const el = $('status');
+  el.className = 'status ' + kind;
+  el.textContent = msg;
+}
+
+// UTF-8 safe base64 helpers (handles Polish diacritics, emoji, etc.)
+function b64Encode(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function b64Decode(str){
+  const binary = atob(str);
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildArticleHtml({tag, tagColor, title, content, date, image}){
+  const safeTag = escapeHtml(tag);
+  const safeTitle = escapeHtml(title);
+  const safeContent = escapeHtml(content).replace(/\n/g, '<br>');
+  if (image && image.trim()){
+    const safeImg = escapeHtml(image.trim());
+    return `<article class="news-card image-news">
+<span class="tag ${tagColor}">${safeTag}</span>
+<h3>${safeTitle}</h3>
+<img
+src="${safeImg}"
+alt="${safeTitle}"
+class="news-image"
+onclick="openNewsImage(this.src)"
+>
+<small>${date}</small>
+</article>
+`;
+  }
+  return `<article class="news-card">
+<span class="tag ${tagColor}">${safeTag}</span>
+<h3>${safeTitle}</h3>
+<p>${safeContent}</p>
+<small>${date}</small>
+</article>
+`;
+}
+
+// True if the character at `index` sits inside an HTML comment <!-- ... -->
+function isInsideComment(content, index){
+  const lastOpen = content.lastIndexOf('<!--', index);
+  const lastClose = content.lastIndexOf('-->', index);
+  return lastOpen !== -1 && lastOpen > lastClose;
+}
+
+// Remove the oldest real (non-commented) news-card articles beyond maxPosts
+function trimOldPosts(content, maxPosts){
+  const articleRegex = /<article class="news-card[^"]*">[\s\S]*?<\/article>\s*/g;
+  const matches = [...content.matchAll(articleRegex)]
+    .filter(m => !isInsideComment(content, m.index));
+
+  if (matches.length <= maxPosts) return content;
+
+  const toRemove = matches.slice(maxPosts); // oldest ones, past the limit
+  let result = content;
+  // remove from the end backwards so earlier indices stay valid
+  for (let i = toRemove.length - 1; i >= 0; i--) {
+    const m = toRemove[i];
+    result = result.slice(0, m.index) + result.slice(m.index + m[0].length);
+  }
+  return result;
+}
+
+$('publishBtn').addEventListener('click', async () => {
+  const token = $('token').value.trim();
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  const branch = $('branch').value.trim();
+  const path = $('path').value.trim();
+  const title = $('title').value.trim();
+  const content = $('content').value.trim();
+  const date = $('date').value;
+  const tag = selectedTag();
+  const image = $('image').value;
+  const maxPosts = parseInt($('maxPosts').value, 10) || 3;
+
+  if (!token){ showStatus('error', 'Podaj token dostępu (Personal Access Token).'); return; }
+  if (!title || !content){ showStatus('error', 'Podaj tytuł i treść wpisu.'); return; }
+
+  if ($('rememberToken').checked) {
+    localStorage.setItem('webklasa_admin_token', token);
+  } else {
+    localStorage.removeItem('webklasa_admin_token');
+  }
+
+  $('publishBtn').disabled = true;
+  showStatus('pending', 'Pobieram aktualną wersję pliku...');
+
+  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/vnd.github+json'
+  };
+
+  try {
+    const getRes = await fetch(`${apiBase}?ref=${branch}`, { headers });
+    if (!getRes.ok) {
+      const errBody = await getRes.text();
+      throw new Error(`Nie udało się pobrać pliku (HTTP ${getRes.status}). ${errBody}`);
+    }
+    const fileData = await getRes.json();
+    const currentContent = b64Decode(fileData.content);
+
+    const marker = '<div class="news-grid">';
+    const markerIndex = currentContent.indexOf(marker);
+    if (markerIndex === -1) {
+      throw new Error('Nie znalazłem znacznika <div class="news-grid"> w pliku — sprawdź, czy struktura strony się nie zmieniła.');
+    }
+
+    const insertAt = markerIndex + marker.length;
+    const newArticle = '\n' + buildArticleHtml({tag: tag.name, tagColor: tag.color, title, content, date, image});
+    let updatedContent =
+      currentContent.slice(0, insertAt) +
+      newArticle +
+      currentContent.slice(insertAt);
+
+    updatedContent = trimOldPosts(updatedContent, maxPosts);
+
+    showStatus('pending', 'Zapisuję zmiany w repozytorium...');
+
+    const putRes = await fetch(apiBase, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `Aktualności: ${title}`,
+        content: b64Encode(updatedContent),
+        sha: fileData.sha,
+        branch: branch
+      })
+    });
+
+    if (!putRes.ok) {
+      const errBody = await putRes.text();
+      throw new Error(`Nie udało się zapisać pliku (HTTP ${putRes.status}). ${errBody}`);
+    }
+
+    showStatus('ok', 'Opublikowano i lista aktualności została przycięta do limitu! Zmiana pojawi się na stronie po odświeżeniu GitHub Pages (zwykle do minuty).');
+    $('title').value = '';
+    $('content').value = '';
+    $('image').value = '';
+    updatePreview();
+  } catch (err) {
+    showStatus('error', err.message);
+  } finally {
+    $('publishBtn').disabled = false;
+  }
+});
+</script>
+</body>
+</html>
