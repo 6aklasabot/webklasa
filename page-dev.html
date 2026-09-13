@@ -132,6 +132,49 @@
   #lockScreen p{color:var(--muted);font-size:.85rem;margin-top:0;}
   #lockError{color:var(--danger);font-size:.82rem;min-height:1.2em;margin-top:8px;}
   #app{display:none;}
+  .nav-tabs{display:flex;gap:10px;margin:24px 0;}
+  .nav-tabs button{
+    flex:1;
+    width:auto;
+    margin-top:0;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text);
+    font-weight:600;
+    font-size:.95rem;
+    cursor:pointer;
+  }
+  .nav-tabs button.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  .page{display:none;}
+  .page.active{display:block;}
+  .file-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+    background:#fbfaff;
+    margin-bottom:8px;
+  }
+  .file-row img, .file-row .file-thumb-empty{
+    width:48px;height:48px;
+    object-fit:cover;
+    border-radius:6px;
+    flex-shrink:0;
+    background:var(--border);
+  }
+  .file-row .file-info{flex:1;min-width:0;}
+  .file-row .file-info .file-name{font-weight:600;font-size:.85rem;word-break:break-all;}
+  .file-row .file-info .file-meta{font-size:.78rem;color:var(--muted);}
+  .file-row button{width:auto;margin:0;padding:8px 14px;background:var(--danger);flex-shrink:0;font-size:.85rem;}
+  .file-row button:hover{background:#b83a3a;}
 </style>
 </head>
 <body>
@@ -145,11 +188,11 @@
 </div>
 
 <div class="wrap" id="app">
-  <h1>Dodaj aktualność</h1>
-  <p class="sub">Wysyła nowy wpis prosto do <code>index.html</code> w repo <strong>6aklasabot/webklasa</strong> przez GitHub API — dodaje go na górze listy i automatycznie usuwa najstarszy wpis, żeby lista nie rosła w nieskończoność.</p>
+  <h1>Dostęp do repo</h1>
+  <p class="sub">Dane dostępu do repozytorium <strong>6aklasabot/webklasa</strong> przez GitHub API — używane zarówno przy dodawaniu aktualności, jak i przy zmianie rozkładu poniżej.</p>
 
   <fieldset>
-    <legend>Dostęp do repo</legend>
+    <legend>GitHub</legend>
     <label for="token">Personal Access Token (GitHub, fine-grained, uprawnienie „Contents: Read and write" na to repo)</label>
     <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
     <div class="checkbox-row">
@@ -176,10 +219,19 @@
         <input type="text" id="path" value="index.html">
       </div>
     </div>
-    <label for="maxPosts">Ile aktualności trzymać na stronie</label>
-    <input type="number" id="maxPosts" value="3" min="1" max="20">
-    <p class="hint">Po dodaniu nowego wpisu najstarsze wpisy powyżej tego limitu zostaną automatycznie usunięte (zwykle usunie się tylko 1).</p>
   </fieldset>
+
+  <div class="nav-tabs">
+    <button type="button" id="navNewsBtn">Dodaj aktualność</button>
+    <button type="button" id="navScheduleBtn">Zmień rozkład</button>
+    <button type="button" id="navDirBtn">/dir</button>
+  </div>
+
+  <p id="pageEmptyHint" class="sub">Wybierz sekcję powyżej, żeby zacząć.</p>
+
+  <div id="page-news" class="page">
+  <h1>Dodaj aktualność</h1>
+  <p class="sub">Wysyła nowy wpis prosto do <code>index.html</code> w repo <strong>6aklasabot/webklasa</strong> przez GitHub API — dodaje go na górze listy i automatycznie usuwa najstarszy wpis, żeby lista nie rosła w nieskończoność.</p>
 
   <fieldset>
     <legend>Rodzaj wpisu</legend>
@@ -224,6 +276,10 @@
     <label for="date">Data</label>
     <input type="date" id="date">
     <p class="hint">Uwaga: powiększanie zdjęcia po kliknięciu wymaga funkcji <code>openNewsImage</code> w script.js — jeśli jej tam nie ma, zdjęcie i tak się wyświetli, ale kliknięcie nic nie zrobi.</p>
+
+    <label for="maxPosts">Ile aktualności trzymać na stronie</label>
+    <input type="number" id="maxPosts" value="3" min="1" max="20">
+    <p class="hint">Po dodaniu nowego wpisu najstarsze wpisy powyżej tego limitu zostaną automatycznie usunięte (zwykle usunie się tylko 1).</p>
   </fieldset>
 
   <div class="preview">
@@ -239,7 +295,51 @@
 
   <button id="publishBtn">Opublikuj na stronie</button>
   <div class="status" id="status"></div>
-</div>
+  </div>
+
+  <div id="page-schedule" class="page">
+    <h1>Zmień rozkład lekcji</h1>
+    <p class="sub">Podmienia zdjęcie w sekcji <code>#schedule</code> na stronie. Zdjęcie wgrywane jest pod swoją własną nazwą pliku, a strona automatycznie zaczyna wskazywać na ten nowy plik.</p>
+
+    <fieldset>
+      <legend>Nowe zdjęcie rozkładu</legend>
+      <label for="scheduleImageFile">Zdjęcie (.jpg, .jpeg, .png, do 25 MB)</label>
+      <input type="file" id="scheduleImageFile" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+      <p class="hint">Zostanie wgrane do <code>upl/pictures/</code> pod swoją (oczyszczoną) nazwą pliku. Stary plik zostaje w repo, ale strona przestaje się do niego odwoływać.</p>
+    </fieldset>
+
+    <div class="preview">
+      <h2>Podgląd nowego zdjęcia</h2>
+      <img id="scheduleImagePreview" style="display:none;max-width:100%;border-radius:8px;">
+      <p id="scheduleImagePreviewEmpty" style="color:var(--muted);font-size:.9rem;margin:0;">Nie wybrano jeszcze pliku.</p>
+    </div>
+
+    <button id="scheduleBtn">Zaktualizuj rozkład</button>
+    <div class="status" id="scheduleStatus"></div>
+  </div>
+
+  <div id="page-dir" class="page">
+    <h1>Pliki (upl/)</h1>
+    <p class="sub">Przegląda, usuwa i wgrywa pliki w folderze <code>upl/</code> repozytorium (wraz z podfolderami) przez GitHub API — na żywo, czyli zawsze pobiera aktualną zawartość z repo.</p>
+
+    <fieldset>
+      <legend>Wgraj nowy plik</legend>
+      <label for="dirUploadFile">Plik</label>
+      <input type="file" id="dirUploadFile">
+      <label for="dirUploadPath">Folder docelowy (w obrębie upl/)</label>
+      <input type="text" id="dirUploadPath" value="upl/pictures/">
+      <p class="hint">Plik zostanie zapisany pod tą ścieżką, pod swoją (oczyszczoną) nazwą. Jeśli plik o tej nazwie już tam jest, zostanie nadpisany.</p>
+      <button id="dirUploadBtn">Wgraj plik</button>
+      <div class="status" id="dirUploadStatus"></div>
+    </fieldset>
+
+    <div class="row" style="align-items:center;gap:10px;margin:24px 0 10px;">
+      <h2 style="margin:0;flex:1;font-size:1rem;">Zawartość folderu upl/</h2>
+      <button type="button" id="dirRefreshBtn" style="width:auto;margin:0;padding:8px 16px;">Odśwież</button>
+    </div>
+    <div id="dirList"></div>
+    <div class="status" id="dirStatus"></div>
+  </div>
 </div>
 
 <script>
@@ -275,6 +375,28 @@ if (sessionStorage.getItem('webklasa_unlocked') === '1') {
 // restore remembered token
 const savedToken = localStorage.getItem('webklasa_admin_token');
 if (savedToken) { $('token').value = savedToken; $('rememberToken').checked = true; }
+
+const PAGES = { news: { page: 'page-news', btn: 'navNewsBtn' }, schedule: { page: 'page-schedule', btn: 'navScheduleBtn' }, dir: { page: 'page-dir', btn: 'navDirBtn' } };
+
+function showPage(name, updateHash){
+  const valid = PAGES[name] ? name : null;
+  Object.keys(PAGES).forEach(key => {
+    const isActive = key === valid;
+    $(PAGES[key].page).classList.toggle('active', isActive);
+    $(PAGES[key].btn).classList.toggle('active', isActive);
+  });
+  $('pageEmptyHint').style.display = valid ? 'none' : 'block';
+  if (updateHash) {
+    const newUrl = valid ? '#' + valid : location.pathname + location.search;
+    try { history.replaceState(null, '', newUrl); } catch (e) { /* sandboxed preview (about:srcdoc) blocks this — harmless */ }
+  }
+  if (valid === 'dir') loadDirList();
+}
+$('navNewsBtn').addEventListener('click', () => showPage('news', true));
+$('navScheduleBtn').addEventListener('click', () => showPage('schedule', true));
+$('navDirBtn').addEventListener('click', () => showPage('dir', true));
+window.addEventListener('hashchange', () => showPage(location.hash.slice(1), false));
+showPage(location.hash.slice(1), false);
 
 $('date').value = new Date().toISOString().slice(0,10);
 
@@ -418,6 +540,206 @@ function escapeHtml(str){
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ---- /dir tab: browse, delete and upload files anywhere under upl/ ----
+
+const DIR_IMAGE_EXT_RE = /\.(jpe?g|png|gif|webp|svg)$/i;
+
+function repoHeaders(){
+  const token = $('token').value.trim();
+  return { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' };
+}
+
+function sanitizeUploadFilename(name){
+  const dot = name.lastIndexOf('.');
+  const base = dot > -1 ? name.slice(0, dot) : name;
+  const ext = dot > -1 ? name.slice(dot + 1).toLowerCase() : '';
+  const safeBase = base.normalize('NFKD')
+    .replace(/[^\w-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'plik';
+  return ext ? `${safeBase}.${ext}` : safeBase;
+}
+
+function formatBytes(bytes){
+  if (bytes == null) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function showDirStatus(kind, msg){
+  const el = $('dirStatus');
+  el.className = 'status ' + kind;
+  el.textContent = msg;
+}
+
+function showDirUploadStatus(kind, msg){
+  const el = $('dirUploadStatus');
+  el.className = 'status ' + kind;
+  el.textContent = msg;
+}
+
+// Fetches the full repo tree (recursively) via the branch's commit, then keeps only files under upl/
+async function fetchUplTree(owner, repo, branch, headers){
+  const branchRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${encodeURIComponent(branch)}`, { headers });
+  if (!branchRes.ok) {
+    const errBody = await branchRes.text();
+    throw new Error(`Nie udało się pobrać brancha (HTTP ${branchRes.status}). ${errBody}`);
+  }
+  const branchData = await branchRes.json();
+  const treeSha = branchData.commit.commit.tree.sha;
+
+  const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=1`, { headers });
+  if (!treeRes.ok) {
+    const errBody = await treeRes.text();
+    throw new Error(`Nie udało się pobrać listy plików (HTTP ${treeRes.status}). ${errBody}`);
+  }
+  const treeData = await treeRes.json();
+  if (treeData.truncated) {
+    showDirStatus('pending', 'Uwaga: repo jest duże, GitHub mógł obciąć listę plików.');
+  }
+  return (treeData.tree || []).filter(item => item.type === 'blob' && item.path.startsWith('upl/'));
+}
+
+function renderDirList(items, owner, repo, branch){
+  const container = $('dirList');
+  container.innerHTML = '';
+  if (!items.length) {
+    container.innerHTML = '<p class="hint">Folder upl/ jest pusty.</p>';
+    return;
+  }
+  items.sort((a, b) => a.path.localeCompare(b.path));
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+
+    if (DIR_IMAGE_EXT_RE.test(item.path)) {
+      const img = document.createElement('img');
+      img.src = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodeGithubPath(item.path)}`;
+      img.alt = item.path;
+      img.onerror = () => { img.style.display = 'none'; };
+      row.appendChild(img);
+    } else {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'file-thumb-empty';
+      row.appendChild(placeholder);
+    }
+
+    const info = document.createElement('div');
+    info.className = 'file-info';
+    info.innerHTML = `<div class="file-name">${escapeHtml(item.path)}</div><div class="file-meta">${formatBytes(item.size)}</div>`;
+    row.appendChild(info);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.textContent = 'Usuń';
+    delBtn.addEventListener('click', () => deleteFile(item.path, item.sha));
+    row.appendChild(delBtn);
+
+    container.appendChild(row);
+  });
+}
+
+async function loadDirList(){
+  const token = $('token').value.trim();
+  if (!token) { showDirStatus('error', 'Podaj token dostępu (Personal Access Token).'); return; }
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  const branch = $('branch').value.trim();
+
+  $('dirRefreshBtn').disabled = true;
+  showDirStatus('pending', 'Wczytuję zawartość folderu upl/...');
+  try {
+    const items = await fetchUplTree(owner, repo, branch, repoHeaders());
+    renderDirList(items, owner, repo, branch);
+    showDirStatus('ok', `Znaleziono ${items.length} plik(ów).`);
+  } catch (err) {
+    showDirStatus('error', err.message);
+  } finally {
+    $('dirRefreshBtn').disabled = false;
+  }
+}
+
+async function deleteFile(path, sha){
+  if (!confirm(`Na pewno usunąć „${path}"? Tej operacji nie da się cofnąć.`)) return;
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  const branch = $('branch').value.trim();
+
+  showDirStatus('pending', `Usuwam ${path}...`);
+  try {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeGithubPath(path)}`;
+    const res = await fetch(apiUrl, {
+      method: 'DELETE',
+      headers: { ...repoHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: `Usunięto plik: ${path}`, sha, branch })
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Nie udało się usunąć pliku (HTTP ${res.status}). ${errBody}`);
+    }
+    showDirStatus('ok', `Usunięto ${path}.`);
+    loadDirList();
+  } catch (err) {
+    showDirStatus('error', err.message);
+  }
+}
+
+$('dirRefreshBtn').addEventListener('click', loadDirList);
+
+$('dirUploadBtn').addEventListener('click', async () => {
+  const token = $('token').value.trim();
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  const branch = $('branch').value.trim();
+  const file = $('dirUploadFile').files[0];
+  let folder = $('dirUploadPath').value.trim();
+
+  if (!token) { showDirUploadStatus('error', 'Podaj token dostępu (Personal Access Token).'); return; }
+  if (!file) { showDirUploadStatus('error', 'Wybierz plik do wgrania.'); return; }
+  if (!folder.startsWith('upl/')) { showDirUploadStatus('error', 'Folder docelowy musi zaczynać się od "upl/".'); return; }
+  if (!folder.endsWith('/')) folder += '/';
+
+  const targetPath = folder + sanitizeUploadFilename(file.name);
+  const headers = repoHeaders();
+
+  $('dirUploadBtn').disabled = true;
+  showDirUploadStatus('pending', `Wgrywam ${targetPath}...`);
+  try {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeGithubPath(targetPath)}`;
+    let sha;
+    const existingRes = await fetch(`${apiUrl}?ref=${branch}`, { headers });
+    if (existingRes.ok) {
+      const existingData = await existingRes.json();
+      sha = existingData.sha;
+    }
+    const buffer = await file.arrayBuffer();
+    const putBody = {
+      message: `Dodaj plik: ${targetPath}`,
+      content: arrayBufferToBase64(buffer),
+      branch
+    };
+    if (sha) putBody.sha = sha;
+
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify(putBody)
+    });
+    if (!putRes.ok) {
+      const errBody = await putRes.text();
+      throw new Error(`Nie udało się wgrać pliku (HTTP ${putRes.status}). ${errBody}`);
+    }
+    showDirUploadStatus('ok', `Wgrano ${targetPath}.`);
+    $('dirUploadFile').value = '';
+    loadDirList();
+  } catch (err) {
+    showDirUploadStatus('error', err.message);
+  } finally {
+    $('dirUploadBtn').disabled = false;
+  }
+});
+
 function buildArticleHtml({tag, tagColor, title, content, date, image}){
   const safeTag = escapeHtml(tag);
   const safeTitle = escapeHtml(title);
@@ -470,6 +792,110 @@ function trimOldPosts(content, maxPosts){
   }
   return result;
 }
+
+// Finds the <img class="schedule-img" ...> tag in index.html and swaps its src to the newly
+// uploaded schedule photo. Throws if the page structure has changed and the tag can't be found.
+function updateScheduleImgSrc(content, newSrc){
+  const tagRegex = /<img\b[^>]*class="schedule-img"[^>]*>/;
+  const match = content.match(tagRegex);
+  if (!match) {
+    throw new Error('Nie znalazłem obrazka rozkładu (class="schedule-img") w pliku — sprawdź, czy struktura strony się nie zmieniła.');
+  }
+  const oldTag = match[0];
+  if (!/src="[^"]*"/.test(oldTag)) {
+    throw new Error('Znalazłem obrazek rozkładu, ale nie ma on atrybutu src.');
+  }
+  const newTag = oldTag.replace(/src="[^"]*"/, `src="${newSrc}"`);
+  return content.slice(0, match.index) + newTag + content.slice(match.index + oldTag.length);
+}
+
+function showScheduleStatus(kind, msg){
+  const el = $('scheduleStatus');
+  el.className = 'status ' + kind;
+  el.textContent = msg;
+}
+
+$('scheduleImageFile').addEventListener('change', () => {
+  const file = $('scheduleImageFile').files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      $('scheduleImagePreview').src = reader.result;
+      $('scheduleImagePreview').style.display = 'block';
+      $('scheduleImagePreviewEmpty').style.display = 'none';
+    };
+    reader.onerror = () => {
+      $('scheduleImagePreview').style.display = 'none';
+      $('scheduleImagePreviewEmpty').textContent = 'Nie udało się wczytać podglądu, ale plik i tak można wysłać.';
+      $('scheduleImagePreviewEmpty').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    $('scheduleImagePreview').style.display = 'none';
+    $('scheduleImagePreviewEmpty').textContent = 'Nie wybrano jeszcze pliku.';
+    $('scheduleImagePreviewEmpty').style.display = 'block';
+  }
+});
+
+$('scheduleBtn').addEventListener('click', async () => {
+  const token = $('token').value.trim();
+  const owner = $('owner').value.trim();
+  const repo = $('repo').value.trim();
+  const branch = $('branch').value.trim();
+  const indexPath = $('path').value.trim();
+  const file = $('scheduleImageFile').files[0];
+
+  if (!token){ showScheduleStatus('error', 'Podaj token dostępu (Personal Access Token).'); return; }
+  if (!file){ showScheduleStatus('error', 'Wybierz plik zdjęcia rozkładu.'); return; }
+
+  $('scheduleBtn').disabled = true;
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/vnd.github+json'
+  };
+
+  try {
+    showScheduleStatus('pending', 'Wgrywam nowe zdjęcie rozkładu...');
+    const imagePath = await uploadImage(file, owner, repo, branch, headers);
+    const newSrc = `https://${owner}.github.io/${repo}/${imagePath}`;
+
+    showScheduleStatus('pending', 'Aktualizuję stronę...');
+    const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeGithubPath(indexPath)}`;
+    const getRes = await fetch(`${apiBase}?ref=${branch}`, { headers });
+    if (!getRes.ok) {
+      const errBody = await getRes.text();
+      throw new Error(`Nie udało się pobrać pliku (HTTP ${getRes.status}). ${errBody}`);
+    }
+    const fileData = await getRes.json();
+    const currentContent = b64Decode(fileData.content);
+    const updatedContent = updateScheduleImgSrc(currentContent, newSrc);
+
+    const putRes = await fetch(apiBase, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `Aktualizacja rozkładu: ${imagePath}`,
+        content: b64Encode(updatedContent),
+        sha: fileData.sha,
+        branch: branch
+      })
+    });
+    if (!putRes.ok) {
+      const errBody = await putRes.text();
+      throw new Error(`Nie udało się zapisać pliku (HTTP ${putRes.status}). ${errBody}`);
+    }
+
+    showScheduleStatus('ok', 'Rozkład zaktualizowany! Zmiana pojawi się na stronie po odświeżeniu GitHub Pages (zwykle do 30 sekund).');
+    $('scheduleImageFile').value = '';
+    $('scheduleImagePreview').style.display = 'none';
+    $('scheduleImagePreviewEmpty').textContent = 'Nie wybrano jeszcze pliku.';
+    $('scheduleImagePreviewEmpty').style.display = 'block';
+  } catch (err) {
+    showScheduleStatus('error', err.message);
+  } finally {
+    $('scheduleBtn').disabled = false;
+  }
+});
 
 $('publishBtn').addEventListener('click', async () => {
   const token = $('token').value.trim();
