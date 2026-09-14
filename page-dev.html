@@ -275,7 +275,7 @@
 
     <label for="date">Data</label>
     <input type="date" id="date">
-    <p class="hint">Uwaga: powiększanie zdjęcia po kliknięciu wymaga funkcji <code>openNewsImage</code> w script.js — jeśli jej tam nie ma, zdjęcie i tak się wyświetli, ale kliknięcie nic nie zrobi.</p>
+    <p class="hint">Kliknięcie zdjęcia otworzy je w tym samym oknie powiększania, co zdjęcie rozkładu.</p>
 
     <label for="maxPosts">Ile aktualności trzymać na stronie</label>
     <input type="number" id="maxPosts" value="3" min="1" max="20">
@@ -753,7 +753,7 @@ function buildArticleHtml({tag, tagColor, title, content, date, image}){
 src="${safeImg}"
 alt="${safeTitle}"
 class="news-image"
-onclick="openNewsImage(this.src)"
+onclick="openScheduleImage(this.src)"
 >
 <small>${date}</small>
 </article>
@@ -985,7 +985,7 @@ $('publishBtn').addEventListener('click', async () => {
       throw new Error(`Nie udało się zapisać pliku (HTTP ${putRes.status}). ${errBody}`);
     }
 
-    showStatus('ok', 'Opublikowano i lista aktualności została przycięta do limitu! Zmiana pojawi się na stronie po odświeżeniu GitHub Pages (zwykle do 30 sekund).');
+    showStatus('ok', 'Opublikowano! Zmiana pojawi się na stronie po pracy GitHub Actions i GitHub Deployments (zwykle do 40 sekund).');
     $('title').value = '';
     $('content').value = '';
     $('imageFile').value = '';
