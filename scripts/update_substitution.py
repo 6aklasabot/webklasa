@@ -8,6 +8,7 @@ Uruchamiane cyklicznie przez GitHub Actions (.github/workflows/update-substituti
 
 import json
 import socket
+import time
 from pathlib import Path
 
 import requests
@@ -23,10 +24,34 @@ def _allowed_gai_family():
 urllib3_cn.allowed_gai_family = _allowed_gai_family
 
 SUBSTITUTION_URL = "https://parcevskio.edupage.org/substitution/"
+MAX_ATTEMPTS = 4
+RETRY_DELAY_SECONDS = 15
 TARGET_CLASS = "7a"
 INDEX_PATH = Path("index.html")
 START_MARKER = "<!-- SUBSTITUTIONS:START -->"
 END_MARKER = "<!-- SUBSTITUTIONS:END -->"
+
+
+def fetch_page(url: str) -> str:
+    """Pobiera stronę, ponawiając próbę kilka razy z rosnącym odstępem —
+    runnery GitHub Actions czasem miewają chwilowe problemy sieciowe albo
+    serwer bywa wolny/przeciążony."""
+    last_error = None
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            resp = requests.get(
+                url,
+                timeout=30,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; WebklasaSubstitutionBot/1.0)"},
+            )
+            resp.raise_for_status()
+            return resp.text
+        except requests.exceptions.RequestException as err:
+            last_error = err
+            print(f"Próba {attempt}/{MAX_ATTEMPTS} nieudana: {err}")
+            if attempt < MAX_ATTEMPTS:
+                time.sleep(RETRY_DELAY_SECONDS * attempt)
+    raise RuntimeError(f"Nie udało się pobrać strony po {MAX_ATTEMPTS} próbach: {last_error}")
 
 
 def fetch_report_html(url: str) -> str:
@@ -36,13 +61,7 @@ def fetch_report_html(url: str) -> str:
     honorując znaki ucieczki (\\", \\\\ itd.), i dopiero jego zawartość
     dekodujemy jako JSON-string.
     """
-    resp = requests.get(
-        url,
-        timeout=20,
-        headers={"User-Agent": "Mozilla/5.0 (compatible; WebklasaSubstitutionBot/1.0)"},
-    )
-    resp.raise_for_status()
-    page = resp.text
+    page = fetch_page(url)
 
     key = '"report_html":"'
     start = page.find(key)
