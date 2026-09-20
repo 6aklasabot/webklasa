@@ -7,10 +7,20 @@ Uruchamiane cyklicznie przez GitHub Actions (.github/workflows/update-substituti
 """
 
 import json
+import socket
 from pathlib import Path
 
 import requests
+import urllib3.util.connection as urllib3_cn
 from bs4 import BeautifulSoup
+
+# GitHub Actions runners czasem próbują łączyć się po IPv6 do hostów, które nie
+# są stamtąd tą drogą osiągalne (błąd "Network is unreachable"). Wymuszamy IPv4.
+def _allowed_gai_family():
+    return socket.AF_INET
+
+
+urllib3_cn.allowed_gai_family = _allowed_gai_family
 
 SUBSTITUTION_URL = "https://parcevskio.edupage.org/substitution/"
 TARGET_CLASS = "7a"
