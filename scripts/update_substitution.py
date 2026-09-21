@@ -10,6 +10,7 @@ import json
 import socket
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 import urllib3.util.connection as urllib3_cn
@@ -32,26 +33,42 @@ START_MARKER = "<!-- SUBSTITUTIONS:START -->"
 END_MARKER = "<!-- SUBSTITUTIONS:END -->"
 
 
+def _get(url: str) -> requests.Response:
+    return requests.get(
+        url,
+        timeout=30,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; WebklasaSubstitutionBot/1.0)"},
+    )
+
+
 def fetch_page(url: str) -> str:
-    """Pobiera stronę, ponawiając próbę kilka razy z rosnącym odstępem —
-    runnery GitHub Actions czasem miewają chwilowe problemy sieciowe albo
-    serwer bywa wolny/przeciążony."""
+    """Pobiera stronę bezpośrednio, ponawiając próbę kilka razy z rosnącym
+    odstępem. Jeśli to konsekwentnie zawodzi (np. serwer blokuje adresy IP
+    centrów danych typu GitHub Actions), próbuje pobrać tę samą stronę przez
+    publiczne proxy AllOrigins jako plan awaryjny."""
     last_error = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
-            resp = requests.get(
-                url,
-                timeout=30,
-                headers={"User-Agent": "Mozilla/5.0 (compatible; WebklasaSubstitutionBot/1.0)"},
-            )
+            resp = _get(url)
             resp.raise_for_status()
             return resp.text
         except requests.exceptions.RequestException as err:
             last_error = err
-            print(f"Próba {attempt}/{MAX_ATTEMPTS} nieudana: {err}")
+            print(f"Bezpośrednia próba {attempt}/{MAX_ATTEMPTS} nieudana: {err}")
             if attempt < MAX_ATTEMPTS:
                 time.sleep(RETRY_DELAY_SECONDS * attempt)
-    raise RuntimeError(f"Nie udało się pobrać strony po {MAX_ATTEMPTS} próbach: {last_error}")
+
+    print("Bezpośrednie połączenie zawiodło za każdym razem — próbuję przez proxy AllOrigins...")
+    proxy_url = f"https://api.allorigins.win/raw?url={quote(url, safe='')}"
+    try:
+        resp = _get(proxy_url)
+        resp.raise_for_status()
+        return resp.text
+    except requests.exceptions.RequestException as err:
+        raise RuntimeError(
+            f"Nie udało się pobrać strony ani bezpośrednio, ani przez proxy. "
+            f"Ostatni błąd bezpośredni: {last_error}. Błąd proxy: {err}"
+        )
 
 
 def fetch_report_html(url: str) -> str:
@@ -150,3 +167,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
