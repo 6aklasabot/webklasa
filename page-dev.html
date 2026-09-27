@@ -952,8 +952,7 @@ $('publishBtn').addEventListener('click', async () => {
     const fileData = await getRes.json();
     const currentContent = b64Decode(fileData.content);
 
-    const marker = '<div class="news-grid">
-';
+    const marker = '<div class="news-grid">/n`;
     const markerIndex = currentContent.indexOf(marker);
     if (markerIndex === -1) {
       throw new Error('Nie znalazłem znacznika <div class="news-grid"> w pliku — sprawdź, czy struktura strony się nie zmieniła.');
