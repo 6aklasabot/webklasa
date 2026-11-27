@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>6a bot admin</title>
+<title>v4.0 Treasure</title>
 <style>
   :root{
     --accent:#6c5ce7;
@@ -242,6 +242,9 @@
       <label style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem;margin:0;padding:10px 14px;border:1px solid var(--border);border-radius:10px;">
         <input type="radio" name="postType" value="image" style="width:20px;height:20px;"> Zdjęcie
       </label>
+      <label style="display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem;margin:0;padding:10px 14px;border:1px solid var(--border);border-radius:10px;">
+        <input type="radio" name="postType" value="audio" style="width:20px;height:20px;"> Audio
+      </label>
     </div>
   </fieldset>
 
@@ -273,6 +276,12 @@
       <p class="hint">Zdjęcie zostanie wgrane do <code>upl/pictures/</code> w repo pod swoją (oczyszczoną) nazwą pliku, a karta na stronie będzie się do niego odwoływać.</p>
     </div>
 
+    <div id="audioGroup" style="display:none;">
+      <label for="audioFile">Plik audio (.mp3, .m4a, .ogg, .wav, do 25 MB)</label>
+      <input type="file" id="audioFile" accept=".mp3,.m4a,.ogg,.wav,audio/mpeg,audio/mp4,audio/ogg,audio/wav">
+      <p class="hint">Plik zostanie wgrany do <code>upl/audio/</code> w repo pod swoją (oczyszczoną) nazwą pliku, a karta na stronie dostanie odtwarzacz audio. Opis (pole „Treść” wyżej) jest opcjonalny.</p>
+    </div>
+
     <label for="date">Data</label>
     <input type="date" id="date">
     <p class="hint">Kliknięcie zdjęcia otworzy je w tym samym oknie powiększania, co zdjęcie rozkładu.</p>
@@ -288,6 +297,7 @@
       <span class="tag blue" id="pvTag">Ogłoszenie</span>
       <h3 id="pvTitle">Tytuł wpisu</h3>
       <img id="pvImage" style="display:none;max-width:100%;border-radius:8px;margin-bottom:8px;">
+      <audio id="pvAudio" controls style="display:none;width:100%;margin-bottom:8px;"></audio>
       <p id="pvContent">Treść wpisu pojawi się tutaj.</p>
       <small id="pvDate">2026-01-01</small>
     </article>
@@ -414,10 +424,17 @@ function updatePostTypeUI(){
   if (type === 'image') {
     $('contentGroup').style.display = 'none';
     $('imageGroup').style.display = 'block';
+    $('audioGroup').style.display = 'none';
     $('titleLabel').textContent = 'Temat';
+  } else if (type === 'audio') {
+    $('contentGroup').style.display = 'block';
+    $('imageGroup').style.display = 'none';
+    $('audioGroup').style.display = 'block';
+    $('titleLabel').textContent = 'Tytuł nagrania';
   } else {
     $('contentGroup').style.display = 'block';
     $('imageGroup').style.display = 'none';
+    $('audioGroup').style.display = 'none';
     $('titleLabel').textContent = 'Tytuł';
   }
   updatePreview();
@@ -429,8 +446,21 @@ function updatePreview(){
   const type = currentPostType();
   $('pvTag').textContent = tag.name;
   $('pvTag').className = 'tag ' + tag.color;
-  $('pvTitle').textContent = $('title').value || (type === 'image' ? 'Temat zdjęcia' : 'Tytuł wpisu');
+  $('pvTitle').textContent = $('title').value || (type === 'image' ? 'Temat zdjęcia' : type === 'audio' ? 'Tytuł nagrania' : 'Tytuł wpisu');
   $('pvDate').textContent = $('date').value || '2026-01-01';
+
+  // audio player preview
+  const audioFile = $('audioFile').files[0];
+  if (type === 'audio' && audioFile) {
+    if ($('pvAudio').dataset.name !== audioFile.name + audioFile.size) {
+      $('pvAudio').src = URL.createObjectURL(audioFile);
+      $('pvAudio').dataset.name = audioFile.name + audioFile.size;
+    }
+    $('pvAudio').style.display = 'block';
+  } else {
+    $('pvAudio').pause();
+    $('pvAudio').style.display = 'none';
+  }
 
   if (type === 'image') {
     $('pvContent').style.display = 'none';
@@ -441,6 +471,11 @@ function updatePreview(){
     } else {
       $('pvImage').style.display = 'none';
     }
+  } else if (type === 'audio') {
+    $('pvImage').style.display = 'none';
+    const text = $('content').value.trim();
+    $('pvContent').style.display = text ? '' : 'none';
+    $('pvContent').textContent = text;
   } else {
     $('pvContent').style.display = '';
     $('pvContent').textContent = $('content').value || 'Treść wpisu pojawi się tutaj.';
@@ -450,6 +485,7 @@ function updatePreview(){
 ['tagCategory','title','content','date'].forEach(id => $(id).addEventListener('input', updatePreview));
 $('tagCategory').addEventListener('change', updatePreview);
 $('imageFile').addEventListener('change', updatePreview);
+$('audioFile').addEventListener('change', updatePreview);
 updatePostTypeUI();
 
 function showStatus(kind, msg){
@@ -488,29 +524,34 @@ function arrayBufferToBase64(buffer){
 }
 
 const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png'];
+const ALLOWED_AUDIO_EXTENSIONS = ['mp3', 'm4a', 'ogg', 'wav'];
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
-function sanitizeFilename(name){
+function sanitizeFilename(name, fallback = 'zdjecie'){
   const dot = name.lastIndexOf('.');
   const base = dot > -1 ? name.slice(0, dot) : name;
   const ext = (dot > -1 ? name.slice(dot + 1) : '').toLowerCase();
   const safeBase = base.normalize('NFKD')
     .replace(/[^\w-]+/g, '_')
     .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '') || 'zdjecie';
+    .replace(/^_+|_+$/g, '') || fallback;
   return { safeBase, ext };
 }
 
-// Uploads the chosen image to upl/pictures/<name>.<ext> and returns that repo-relative path
-async function uploadImage(file, owner, repo, branch, headers){
-  const { safeBase, ext } = sanitizeFilename(file.name);
-  if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
-    throw new Error('Dozwolone są tylko pliki .jpg, .jpeg i .png.');
+// Uploads a file to <folder>/<name>.<ext> in the repo and returns that repo-relative path
+async function uploadFile(file, folder, allowedExts, errorMsg, commitLabel, fallbackName, owner, repo, branch, headers){
+  const { safeBase, ext } = sanitizeFilename(file.name, fallbackName);
+  if (!allowedExts.includes(ext)) {
+    throw new Error(errorMsg);
   }
-  const imagePath = `upl/pictures/${safeBase}.${ext}`;
-  const imageApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeGithubPath(imagePath)}`;
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error('Plik jest za duży (maksymalnie 25 MB).');
+  }
+  const filePath = `${folder}/${safeBase}.${ext}`;
+  const fileApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeGithubPath(filePath)}`;
 
   let sha;
-  const existingRes = await fetch(`${imageApiUrl}?ref=${branch}`, { headers });
+  const existingRes = await fetch(`${fileApiUrl}?ref=${branch}`, { headers });
   if (existingRes.ok) {
     const existingData = await existingRes.json();
     sha = existingData.sha;
@@ -518,22 +559,36 @@ async function uploadImage(file, owner, repo, branch, headers){
 
   const buffer = await file.arrayBuffer();
   const putBody = {
-    message: `Dodaj zdjęcie: ${safeBase}.${ext}`,
+    message: `${commitLabel}: ${safeBase}.${ext}`,
     content: arrayBufferToBase64(buffer),
     branch
   };
   if (sha) putBody.sha = sha;
 
-  const putRes = await fetch(imageApiUrl, {
+  const putRes = await fetch(fileApiUrl, {
     method: 'PUT',
     headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify(putBody)
   });
   if (!putRes.ok) {
     const errBody = await putRes.text();
-    throw new Error(`Nie udało się wgrać zdjęcia (HTTP ${putRes.status}). ${errBody}`);
+    throw new Error(`Nie udało się wgrać pliku (HTTP ${putRes.status}). ${errBody}`);
   }
-  return imagePath;
+  return filePath;
+}
+
+// Uploads the chosen image to upl/pictures/<name>.<ext> and returns that repo-relative path
+function uploadImage(file, owner, repo, branch, headers){
+  return uploadFile(file, 'upl/pictures', ALLOWED_IMAGE_EXTENSIONS,
+    'Dozwolone są tylko pliki .jpg, .jpeg i .png.', 'Dodaj zdjęcie', 'zdjecie',
+    owner, repo, branch, headers);
+}
+
+// Uploads the chosen audio file to upl/audio/<name>.<ext> and returns that repo-relative path
+function uploadAudio(file, owner, repo, branch, headers){
+  return uploadFile(file, 'upl/audio', ALLOWED_AUDIO_EXTENSIONS,
+    'Dozwolone są tylko pliki .mp3, .m4a, .ogg i .wav.', 'Dodaj audio', 'audio',
+    owner, repo, branch, headers);
 }
 
 function escapeHtml(str){
@@ -740,10 +795,21 @@ $('dirUploadBtn').addEventListener('click', async () => {
   }
 });
 
-function buildArticleHtml({tag, tagColor, title, content, date, image}){
+function buildArticleHtml({tag, tagColor, title, content, date, image, audio}){
   const safeTag = escapeHtml(tag);
   const safeTitle = escapeHtml(title);
   const safeContent = escapeHtml(content).replace(/\n/g, '<br>');
+  if (audio && audio.trim()){
+    const safeAudio = escapeHtml(audio.trim());
+    const descHtml = safeContent ? `<p>${safeContent}</p>\n` : '';
+    return `<article class="news-card audio-news">
+<span class="tag ${tagColor}">${safeTag}</span>
+<h3>${safeTitle}</h3>
+${descHtml}<audio controls preload="none" src="${safeAudio}">Twoja przeglądarka nie obsługuje odtwarzacza audio.</audio>
+<small>${date}</small>
+</article>
+`;
+  }
   if (image && image.trim()){
     const safeImg = escapeHtml(image.trim());
     return `<article class="news-card image-news">
@@ -905,11 +971,12 @@ $('publishBtn').addEventListener('click', async () => {
   const path = $('path').value.trim();
   const title = $('title').value.trim();
   const postType = currentPostType();
-  const content = postType === 'article' ? $('content').value.trim() : '';
+  const content = postType === 'image' ? '' : $('content').value.trim();
   const date = $('date').value;
   const tag = selectedTag();
   const maxPosts = parseInt($('maxPosts').value, 10) || 3;
   const imageFile = $('imageFile').files[0];
+  const audioFile = $('audioFile').files[0];
 
   if (!token){ showStatus('error', 'Podaj token dostępu (Personal Access Token).'); return; }
   if (postType === 'article' && (!title || !content)) {
@@ -920,6 +987,12 @@ $('publishBtn').addEventListener('click', async () => {
   }
   if (postType === 'image' && !imageFile) {
     showStatus('error', 'Wybierz plik zdjęcia (.jpg, .jpeg lub .png).'); return;
+  }
+  if (postType === 'audio' && !title) {
+    showStatus('error', 'Podaj tytuł nagrania.'); return;
+  }
+  if (postType === 'audio' && !audioFile) {
+    showStatus('error', 'Wybierz plik audio (.mp3, .m4a, .ogg lub .wav).'); return;
   }
 
   if ($('rememberToken').checked) {
@@ -938,9 +1011,13 @@ $('publishBtn').addEventListener('click', async () => {
 
   try {
     let imagePath = null;
+    let audioPath = null;
     if (postType === 'image') {
       showStatus('pending', 'Wgrywam zdjęcie...');
       imagePath = await uploadImage(imageFile, owner, repo, branch, headers);
+    } else if (postType === 'audio') {
+      showStatus('pending', 'Wgrywam plik audio...');
+      audioPath = await uploadAudio(audioFile, owner, repo, branch, headers);
     }
 
     showStatus('pending', 'Pobieram aktualną wersję pliku...');
@@ -959,7 +1036,7 @@ $('publishBtn').addEventListener('click', async () => {
     }
 
     const insertAt = markerIndex + marker.length;
-    const newArticle = '\n' + buildArticleHtml({tag: tag.name, tagColor: tag.color, title, content, date, image: imagePath});
+    const newArticle = '\n' + buildArticleHtml({tag: tag.name, tagColor: tag.color, title, content, date, image: imagePath, audio: audioPath});
     let updatedContent =
       currentContent.slice(0, insertAt) +
       newArticle +
@@ -989,6 +1066,7 @@ $('publishBtn').addEventListener('click', async () => {
     $('title').value = '';
     $('content').value = '';
     $('imageFile').value = '';
+    $('audioFile').value = '';
     updatePreview();
   } catch (err) {
     showStatus('error', err.message);
