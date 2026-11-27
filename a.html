@@ -62,6 +62,13 @@
         </div>
         <div class="news-grid">
 
+<article class="news-card audio-news">
+<span class="tag pink">Audio</span>
+<h3>Nowa piosenka Aszkelowicza!</h3>
+<audio controls preload="none" src="upl/audio/Piosenka.mp3">Twoja przeglądarka nie obsługuje odtwarzacza audio.</audio>
+<small>2026-11-26</small>
+</article>
+
 <article class="news-card">
 <span class="tag green">Szkoła</span>
 <h3>18-19 Listopada</h3>
@@ -76,13 +83,6 @@
 <small>2026-11-06</small>
 </article>
 
-<article class="news-card">
-<span class="tag blue">Ogłoszenie</span>
-<h3>W Litwie została zmieniona strefa czasowa!</h3>
-<p>Dzisiaj na Litwie zmieniono strefa czasowa na zimowy. Zegary przestawiono o godzinę do tyłu, więc mogliśmy spać dłużej. Wieczorem szybciej robi się ciemno. Telefony czas sami zmienili.</p>
-<small>2026-10-25</small>
-</article>
-
 <!-- Photo post
     <article class="news-card image-news">
         <span class="tag purple">Przerwy Techniczne</span>
@@ -95,7 +95,16 @@
             onclick="openNewsImage(this.src)"
         > 
         <small>1970-01-01</small>
-    </article> -->
+    </article>
+
+Audio Post
+    <article class="news-card audio-news">
+        <span class="tag purple">Przerwy Techniczne</span>
+        <h3>Piosenka</h3>
+      <audio controls preload="none" src="upl/audio/Piosenka.mp3">Twoja przeglądarka nie obsługuje odtwarzacza audio.</audio>
+<small>1970-01-01</small>
+</article>
+          -->
           </div>
       </div>
     </section>
@@ -107,11 +116,15 @@
         </div>
         <div class="schedule-img-wrap">
           <img
-    src="https://6aklasabot.github.io/webklasa/upl/pictures/rozklad11.jpg"
+    src="https://6aklasabot.github.io/webklasa/upl/pictures/Screenshot_20261116_154412_Samsung_Browser.jpg"
     alt="Rozkład"
     class="schedule-img"
     onclick="openScheduleImage(this.src)"
 >
+        </div>
+        <div class="schedule-actions">
+          <button type="button" class="btn secondary" onclick="downloadSchedule()">⬇️ Pobierz</button>
+          <button type="button" class="btn secondary" onclick="printSchedule()">🖨️ Drukuj</button>
         </div>
         <p class="hint"></p>
       </div>
@@ -121,10 +134,22 @@
       <div class="container">
         <div class="section-heading">
           <h2>Zamiany</h2>
+        </div>
         <!-- SUBSTITUTIONS:START -->
+<div class="subst-grid">
+<article class="news-card subst-day" data-date="2026-11-26">
+<h3><span class="subst-label">Dzisiaj</span> <span class="subst-date">(11.26.2026)</span></h3>
 <p class="subst-empty">Brak zastępstw dla klasy 7a na dziś.</p>
+</article>
+<article class="news-card subst-day" data-date="2026-11-27">
+<h3><span class="subst-label">Jutro</span> <span class="subst-date">(11.27.2026)</span></h3>
+<p class="subst-empty">Brak zastępstw dla klasy 7a na jutro.</p>
+</article>
+</div>
 <!-- SUBSTITUTIONS:END -->
-    
+      </div>
+    </section>
+
     <section id="contacts" class="section">
       <div class="container contact-box">
         <div>
@@ -144,7 +169,7 @@
     <div class="container footer-inner">
       <span>© 2026, All rights reserved.</span>
       <span><a href="https://www.githubstatus.com">Powered by GitHub</a>
-      <span>Stworzone dla klasy 7A</span>
+      <span>Stworzone dla klasy 7A, 7A Bot v4.0 Treasure</span>
       
     </div>
   </footer>
