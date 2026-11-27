@@ -1,3 +1,4 @@
+# 7a Bot 4.0 Treasure, release date: 11/27/2026. If you are seeing this, it's more like a special message to deploy all files into the site. Woop, you got lucky ig, now you can share with this!
 """
 Pobiera zastępstwa z Edupage dla jednej klasy (domyślnie 7a) na DZIŚ i na JUTRO
 i wstawia je do index.html między znacznikami
