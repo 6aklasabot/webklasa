@@ -583,19 +583,52 @@ footer{
     display:flex;
     justify-content:center;
     flex-wrap:wrap;
-    gap:12px;
-    margin-top:18px;
+    gap:14px;
+    margin-top:22px;
 }
 
-.schedule-actions .btn{
+.sch-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 26px;
+    border-radius:14px;
     font:inherit;
     font-weight:750;
     cursor:pointer;
+    border:2px solid #6c5ce7;
+    transition:transform .2s ease,box-shadow .2s ease,background .2s ease,color .2s ease;
 }
 
-.schedule-actions .btn:hover{
-    border-color:#6c5ce7;
-    color:#6c5ce7;
+.sch-btn svg{
+    width:20px;
+    height:20px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.sch-download{background:#6c5ce7;color:#fff;box-shadow:0 8px 22px #6c5ce740}
+.sch-print{background:#fff;color:#6c5ce7}
+
+.sch-btn:hover{transform:translateY(-3px);box-shadow:0 12px 28px #6c5ce74d}
+.sch-print:hover{background:#6c5ce7;color:#fff}
+.sch-btn:active{transform:translateY(0) scale(.96)}
+
+.sch-download:hover svg{animation:sch-bounce .7s ease infinite}
+.sch-print:hover svg{animation:sch-shake .5s ease infinite}
+
+@keyframes sch-bounce{
+    0%,100%{transform:translateY(-2px)}
+    50%{transform:translateY(4px)}
+}
+
+@keyframes sch-shake{
+    0%,100%{transform:rotate(0)}
+    25%{transform:rotate(-12deg)}
+    75%{transform:rotate(12deg)}
 }
 
 #schedulePrintArea{
