@@ -63,8 +63,8 @@
         <div class="news-grid">
 
 <article class="news-card audio-news">
-<span class="tag pink">Audio</span>
-<h3>Nowa piosenka Aszkelowicza!</h3>
+<span class="tag pink">Wydarzenia</span>
+<h3>Nowa Piosenka Aszkełowicza!</h3>
 <audio controls preload="none" src="upl/audio/Piosenka.mp3">Twoja przeglądarka nie obsługuje odtwarzacza audio.</audio>
 <small>2026-11-26</small>
 </article>
@@ -97,11 +97,11 @@
         <small>1970-01-01</small>
     </article>
 
-Audio Post
-    <article class="news-card audio-news">
-        <span class="tag purple">Przerwy Techniczne</span>
-        <h3>Piosenka</h3>
-      <audio controls preload="none" src="upl/audio/Piosenka.mp3">Twoja przeglądarka nie obsługuje odtwarzacza audio.</audio>
+  Audio Post
+<article class="news-card audio-news">
+<span class="tag purple">Przerwy Techniczne</span>
+<h3>Example Text</h3>
+<audio controls preload="none" src="upl/audio/example.mp3">Twoja przeglądarka nie obsługuje odtwarzacza audio.</audio>
 <small>1970-01-01</small>
 </article>
           -->
@@ -123,8 +123,12 @@ Audio Post
 >
         </div>
         <div class="schedule-actions">
-          <button type="button" class="btn secondary" onclick="downloadSchedule()">⬇️ Pobierz</button>
-          <button type="button" class="btn secondary" onclick="printSchedule()">🖨️ Drukuj</button>
+          <button type="button" class="sch-btn sch-download" onclick="downloadSchedule()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>Pobierz
+          </button>
+          <button type="button" class="sch-btn sch-print" onclick="printSchedule()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 14h10v7H7z"/></svg>Drukuj
+          </button>
         </div>
         <p class="hint"></p>
       </div>
