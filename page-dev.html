@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>v4.0 Treasure Developer Corner</title>
+<title>6a bot admin</title>
 <style>
   :root{
     --accent:#6c5ce7;
@@ -872,7 +872,29 @@ function updateScheduleImgSrc(content, newSrc){
     throw new Error('Znalazłem obrazek rozkładu, ale nie ma on atrybutu src.');
   }
   const newTag = oldTag.replace(/src="[^"]*"/, `src="${newSrc}"`);
-  return content.slice(0, match.index) + newTag + content.slice(match.index + oldTag.length);
+  let result = content.slice(0, match.index) + newTag + content.slice(match.index + oldTag.length);
+  return ensureScheduleButtons(result);
+}
+
+// Przyciski Pobierz / Drukuj — jeśli ich brakuje w index.html, dodaje je pod zdjęciem rozkładu
+// (same przyciski czytają aktualny src z .schedule-img, więc działają po każdej zmianie rozkładu).
+const SCHEDULE_BUTTONS_HTML = `
+        <div class="schedule-actions">
+          <button type="button" class="sch-btn sch-download" onclick="downloadSchedule()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>Pobierz
+          </button>
+          <button type="button" class="sch-btn sch-print" onclick="printSchedule()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 14h10v7H7z"/></svg>Drukuj
+          </button>
+        </div>`;
+
+function ensureScheduleButtons(content){
+  if (content.includes('class="schedule-actions"')) return content;
+  const imgIdx = content.search(/<img\b[^>]*class="schedule-img"/);
+  const wrapEnd = content.indexOf('</div>', imgIdx);
+  if (imgIdx === -1 || wrapEnd === -1) return content;
+  const at = wrapEnd + '</div>'.length;
+  return content.slice(0, at) + SCHEDULE_BUTTONS_HTML + content.slice(at);
 }
 
 function showScheduleStatus(kind, msg){
@@ -923,7 +945,7 @@ $('scheduleBtn').addEventListener('click', async () => {
   try {
     showScheduleStatus('pending', 'Wgrywam nowe zdjęcie rozkładu...');
     const imagePath = await uploadImage(file, owner, repo, branch, headers);
-    const newSrc = `https://${owner}.github.io/${repo}/${imagePath}`;
+    const newSrc = `https://${owner}.github.io/${repo}/${imagePath}?v=${Date.now()}`;
 
     showScheduleStatus('pending', 'Aktualizuję stronę...');
     const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeGithubPath(indexPath)}`;
