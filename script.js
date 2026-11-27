@@ -311,3 +311,136 @@ if (scheduleOverlay && scheduleZoomImage && scheduleZoomLevel) {
         }
     });
 }
+
+
+/* =========================
+   ZAMIANY - AUTOMATYCZNE "DZISIAJ / JUTRO"
+   (etykiety zawsze zgodne z dzisiejszą datą, nawet jeśli
+   strona została wygenerowana wczoraj)
+   ========================= */
+
+(function () {
+
+    const cards = document.querySelectorAll(".subst-day[data-date]");
+
+    if (!cards.length) return;
+
+    function isoDate(d) {
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+    }
+
+    function updateSubstitutionLabels() {
+
+        const now = new Date();
+        const today = isoDate(now);
+        const tomorrow = isoDate(
+            new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+        );
+
+        cards.forEach(function (card) {
+
+            const date = card.dataset.date;
+            const label = card.querySelector(".subst-label");
+
+            if (date === today) {
+                label.textContent = "Dzisiaj";
+                card.hidden = false;
+            } else if (date === tomorrow) {
+                label.textContent = "Jutro";
+                card.hidden = false;
+            } else {
+                /* nieaktualne dane z przeszłości */
+                card.hidden = date < today;
+            }
+        });
+    }
+
+    updateSubstitutionLabels();
+
+    setInterval(updateSubstitutionLabels, 60 * 1000);
+
+    document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) updateSubstitutionLabels();
+    });
+})();
+
+
+/* =========================
+   ROZKŁAD - POBIERZ / DRUKUJ
+   (zawsze używa aktualnego zdjęcia z .schedule-img)
+   ========================= */
+
+async function downloadSchedule() {
+
+    const img = document.querySelector(".schedule-img");
+
+    if (!img) return;
+
+    const url = img.src;
+
+    const name =
+        decodeURIComponent(url.split("?")[0].split("/").pop()) || "rozklad.png";
+
+    try {
+
+        const response = await fetch(url);
+
+        if (!response.ok) throw new Error("HTTP " + response.status);
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = name;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(function () {
+            URL.revokeObjectURL(blobUrl);
+        }, 1000);
+
+    } catch (error) {
+
+        /* plan awaryjny: otwórz zdjęcie w nowej karcie */
+        window.open(url, "_blank");
+    }
+}
+
+function printSchedule() {
+
+    const img = document.querySelector(".schedule-img");
+
+    if (!img) return;
+
+    let area = document.getElementById("schedulePrintArea");
+
+    if (!area) {
+        area = document.createElement("div");
+        area.id = "schedulePrintArea";
+        document.body.appendChild(area);
+    }
+
+    area.innerHTML = "";
+
+    const printImg = new Image();
+
+    printImg.alt = "Rozkład";
+
+    printImg.onload = function () {
+        document.body.classList.add("printing-schedule");
+        window.print();
+    };
+
+    area.appendChild(printImg);
+
+    printImg.src = img.src;
+}
+
+window.addEventListener("afterprint", function () {
+    document.body.classList.remove("printing-schedule");
+});
